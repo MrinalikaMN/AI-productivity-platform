@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — AI Productivity Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+
+/* ── RESET & VARIABLES ── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --navy:       #0b1f3a;
+  --navy-mid:   #0f2a5c;
+  --navy-light: #1f4ea3;
+  --accent:     #c8a96e;
+  --accent-dim: rgba(200,169,110,0.12);
+  --white:      #ffffff;
+  --muted:      rgba(255,255,255,0.45);
+  --border:     rgba(255,255,255,0.08);
+  --card-bg:    rgba(255,255,255,0.04);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--navy);
+  color: var(--white);
+  overflow-x: hidden;
+}
+
+/* ── NAVBAR ── */
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 0 64px;
+  height: 72px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(11,31,58,0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  color: var(--white);
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-dot {
+  width: 8px; height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:0.6; transform:scale(1.3); }
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+nav a {
+  text-decoration: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  transition: color 0.2s;
+  position: relative;
+}
+
+nav a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0;
+  width: 0; height: 1px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+nav a:hover { color: var(--white); }
+nav a:hover::after { width: 100%; }
+nav a.active { color: var(--white); }
+nav a.active::after { width: 100%; background: var(--accent); }
+
+.nav-cta {
+  padding: 9px 22px;
+  background: var(--accent);
+  color: var(--navy) !important;
+  border-radius: 8px;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  transition: all 0.2s ease !important;
+}
+.nav-cta::after { display:none !important; }
+.nav-cta:hover { background: #d4b87a !important; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,169,110,0.35); }
+
+/* ── PAGE HERO ── */
+.page-hero {
+  padding: 160px 64px 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.page-hero-bg::before {
+  content: '';
+  position: absolute;
+  top: -120px; right: -80px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(31,78,163,0.18) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-hero-bg::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; left: 20%;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(200,169,110,0.07) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.hero-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 100% at 60% 40%, black 0%, transparent 100%);
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.hero-left {}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.1s ease forwards;
+}
+
+.eyebrow-line {
+  width: 28px; height: 1px;
+  background: var(--accent);
+}
+
+.hero-left h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(44px, 5vw, 64px);
+  line-height: 1.05;
+  letter-spacing: -1px;
+  color: var(--white);
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.25s ease forwards;
+}
+
+.hero-left h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-left p {
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--muted);
+  font-weight: 300;
+  max-width: 480px;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.4s ease forwards;
+}
+
+/* Right side — mission statement card */
+.hero-right {
+  opacity: 0;
+  animation: fadeUp 0.7s 0.55s ease forwards;
+}
+
+.mission-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.mission-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.mission-quote {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  font-style: italic;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.5;
+  margin-bottom: 32px;
+}
+
+.mission-quote span { color: var(--accent); }
+
+.mission-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mission-author {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.mission-role {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── DIVIDER ── */
+.section-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+}
+
+/* ── FEATURES SECTION ── */
+.features-section {
+  padding: 120px 64px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 40px;
+  margin-bottom: 72px;
+}
+
+.section-tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(30px, 3.5vw, 44px);
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+.section-title em { font-style: italic; color: var(--accent); }
+
+.section-sub {
+  max-width: 340px;
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.7;
+  text-align: right;
+  font-weight: 300;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  background: var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.feat-card {
+  background: #0d2244;
+  padding: 44px 40px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+}
+
+.feat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.feat-card:hover { background: #0f2650; }
+.feat-card:hover::after { opacity: 1; }
+
+.feat-icon {
+  font-size: 28px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.feat-card h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  color: var(--white);
+  margin-bottom: 12px;
+}
+
+.feat-card p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.feat-number {
+  position: absolute;
+  bottom: 24px; right: 28px;
+  font-family: 'DM Serif Display', serif;
+  font-size: 56px;
+  color: rgba(255,255,255,0.04);
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ── GOALS SECTION ── */
+.goals-section {
+  background: rgba(255,255,255,0.02);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 120px 64px;
+}
+
+.goals-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 100px;
+  align-items: start;
+}
+
+.goals-left {}
+
+.goals-body {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.goal-item {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 24px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  transition: all 0.3s ease;
+}
+
+.goal-item:hover {
+  background: rgba(200,169,110,0.06);
+  border-color: rgba(200,169,110,0.2);
+  transform: translateX(4px);
+}
+
+.goal-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.goal-text h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+
+.goal-text p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* Stats panel on the right */
+.goals-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  background: rgba(200,169,110,0.06);
+  border-color: rgba(200,169,110,0.2);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+
+.stat-big {
+  font-family: 'DM Serif Display', serif;
+  font-size: 52px;
+  color: var(--white);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-big span { color: var(--accent); font-size: 32px; }
+
+.stat-desc {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── TEAM / VALUES SECTION ── */
+.values-section {
+  padding: 120px 64px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-top: 72px;
+}
+
+.value-card {
+  padding: 36px 28px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.value-card:hover {
+  background: var(--accent-dim);
+  border-color: rgba(200,169,110,0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+}
+
+.value-emoji {
+  font-size: 36px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.value-card h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+
+.value-card p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* ── CTA STRIP ── */
+.cta-strip {
+  margin: 0 64px 100px;
+  padding: 72px 80px;
+  background: linear-gradient(135deg, #0f2a5c 0%, #1a3d7a 60%, #0f2a5c 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(200,169,110,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-strip::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(200,169,110,0.1) 0%, transparent 60%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.cta-text h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(26px, 3vw, 36px);
+  color: var(--white);
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+}
+
+.cta-text p {
+  font-size: 15px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.65;
+  max-width: 420px;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.btn-primary {
+  padding: 14px 30px;
+  background: var(--accent);
+  color: var(--navy);
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-primary:hover {
+  background: #d4b87a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(200,169,110,0.35);
+}
+
+.btn-ghost {
+  padding: 14px 28px;
+  background: transparent;
+  color: rgba(255,255,255,0.65);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-ghost:hover {
+  border-color: rgba(255,255,255,0.4);
+  color: var(--white);
+  background: rgba(255,255,255,0.05);
+}
+
+/* ── FOOTER ── */
+footer {
+  background: #060f1e;
+  border-top: 1px solid var(--border);
+  padding: 56px 64px 40px;
+}
+
+.footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 48px;
+  gap: 40px;
+}
+
+.footer-logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  color: var(--white);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-logo-dot { width:7px; height:7px; background:var(--accent); border-radius:50%; }
+
+.footer-tagline { font-size:13px; color:var(--muted); max-width:260px; line-height:1.6; }
+
+.footer-links { display:flex; gap:64px; }
+
+.footer-col h4 {
+  font-size:11px; font-weight:600; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--accent); margin-bottom:20px;
+}
+
+.footer-col a {
+  display:block; text-decoration:none; color:var(--muted);
+  font-size:14px; margin-bottom:12px; transition:color 0.2s;
+}
+
+.footer-col a:hover { color:var(--white); }
+
+.footer-bottom {
+  border-top:1px solid var(--border);
+  padding-top:28px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+
+.footer-copy { font-size:13px; color:rgba(255,255,255,0.2); }
+.footer-badge { font-size:12px; color:rgba(255,255,255,0.18); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(24px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.reveal {
+  opacity:0; transform:translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.visible { opacity:1; transform:translateY(0); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+  header, .page-hero, .goals-section, .cta-strip { padding-left: 40px; padding-right: 40px; }
+  .features-section, .values-section { padding: 80px 40px; }
+  .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+  .hero-left h1 { font-size: 44px; }
+  .goals-inner { grid-template-columns: 1fr; gap: 60px; }
+  .features-grid { grid-template-columns: 1fr 1fr; }
+  .values-grid { grid-template-columns: 1fr 1fr; }
+  .cta-strip { flex-direction: column; padding: 56px 48px; text-align: center; }
+  .cta-text p { max-width: 100%; }
+  .cta-buttons { justify-content: center; }
+  .footer-links { gap: 36px; }
+}
+
+@media (max-width: 700px) {
+  header { padding: 0 24px; }
+  nav { gap: 16px; }
+  .page-hero { padding: 120px 24px 80px; }
+  .features-section, .values-section { padding: 72px 24px; }
+  .goals-section { padding: 72px 24px; }
+  .features-grid { grid-template-columns: 1fr; }
+  .values-grid { grid-template-columns: 1fr 1fr; }
+  .section-header { flex-direction: column; align-items: flex-start; }
+  .section-sub { text-align: left; max-width: 100%; }
+  .cta-strip { margin: 0 24px 60px; padding: 48px 28px; }
+  .cta-buttons { flex-direction: column; align-items: stretch; }
+  footer { padding: 40px 24px 28px; }
+  .footer-top { flex-direction: column; }
+  .footer-links { flex-wrap: wrap; gap: 28px; }
+  .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<header>
+  <a href="index.html" class="logo">
+    <div class="logo-dot"></div>
+    AI Productivity
+  </a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="workflow_tracker.html">Workflow Tracker</a>
+    <a href="roi.html">ROI Calculator</a>
+    <a href="productivity management.html"> Productivity Timeline</a>
+    <a href="Correlation.html">IO Correlation</a>
+    <a href="about.html" class="active">About</a>
+    <a href="workflow_tracker.html" class="nav-cta">Get Started</a>
+  </nav>
+</header>
+
+<!-- ── PAGE HERO ── -->
+<section class="page-hero">
+  <div class="page-hero-bg">
+    <div class="hero-grid-bg"></div>
+  </div>
+
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="eyebrow">
+        <span class="eyebrow-line"></span>
+        About the Platform
+      </div>
+      <h1>Built to make<br>productivity <em>measurable</em></h1>
+      <p>
+        The AI Productivity Platform is a task management and efficiency
+        intelligence tool — designed to help organisations organise work,
+        track execution, and act on data-driven insights.
+      </p>
+    </div>
+
+    <div class="hero-right">
+      <div class="mission-card">
+        <p class="mission-quote">
+          "The goal isn't to work harder — it's to <span>work smarter and efficient</span>."
+        </p>
+        <div class="mission-meta">
+          <span class="mission-author">Platform's Mission</span>
+          <span class="mission-role">AI Productivity Platform · 2026</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── FEATURES ── -->
+<section style="padding: 120px 64px; background: transparent;">
+  <div style="max-width:1200px; margin:0 auto;">
+    <div class="section-header reveal">
+      <div>
+        <p class="section-tag">What We Do</p>
+        <h2 class="section-title">Six capabilities,<br>one <em>unified</em> platform</h2>
+      </div>
+      <p class="section-sub">Every feature is purpose-built to reduce operational blind spots and improve team execution.</p>
+    </div>
+
+    <div class="features-grid reveal">
+      <div class="feat-card">
+        <span class="feat-icon">📋</span>
+        <h3>Task Management</h3>
+        <p>Add, edit, and delete tasks with full context — owner, deadline, priority, and time estimates — all in one place.</p>
+        <span class="feat-number">01</span>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🔄</span>
+        <h3>Status Tracking</h3>
+        <p>Monitor every task through its lifecycle: Pending, In Progress, and Completed — with colour-coded clarity.</p>
+        <span class="feat-number">02</span>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">⚡</span>
+        <h3>Efficiency Scoring</h3>
+        <p>Automatically calculate productivity efficiency by comparing estimated vs. actual time for every task.</p>
+        <span class="feat-number">03</span>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">📊</span>
+        <h3>Productivity Analytics</h3>
+        <p>Visualise performance trends and productivity metrics through dynamic, real-time graphs and dashboards.</p>
+        <span class="feat-number">04</span>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🔍</span>
+        <h3>Progress Indicators</h3>
+        <p>Visual progress bars give instant clarity on where each task stands, without needing to read every row.</p>
+        <span class="feat-number">05</span>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">💰</span>
+        <h3>ROI Calculator</h3>
+        <p>Project the financial return of productivity improvements — translating time saved into real rupee value.</p>
+        <span class="feat-number">06</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── GOALS & STATS ── -->
+<section class="goals-section">
+  <div class="goals-inner">
+    <div class="goals-left reveal">
+      <p class="section-tag">Project Goals</p>
+      <h2 class="section-title">Why this<br>platform <em>exists</em></h2>
+      <div class="goals-body">
+        <div class="goal-item">
+          <span class="goal-icon">🎯</span>
+          <div class="goal-text">
+            <h4>Make productivity measurable</h4>
+            <p>Turn abstract work into concrete data — so teams can see exactly where time is going and where it's being lost.</p>
+          </div>
+        </div>
+        <div class="goal-item">
+          <span class="goal-icon">🔗</span>
+          <div class="goal-text">
+            <h4>Connect effort to outcomes</h4>
+            <p>Bridge the gap between individual task execution and enterprise-wide efficiency using real-time analytics.</p>
+          </div>
+        </div>
+        <div class="goal-item">
+          <span class="goal-icon">🚀</span>
+          <div class="goal-text">
+            <h4>Enable evidence-based decisions</h4>
+            <p>Give managers and leaders the data clarity they need to optimise teams, allocate resources, and drive results.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="goals-right reveal" style="transition-delay:0.2s">
+      <div class="stat-card">
+        <div class="stat-big">32<span>%</span></div>
+        <div class="stat-desc">Average productivity improvement reported across all tracked industries using the platform</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-big">40<span>%</span></div>
+        <div class="stat-desc">Average reduction in time spent on manual and repetitive workflow tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-big">5<span>+</span></div>
+        <div class="stat-desc">Industries actively supported — from Software and Education to Logistics and Healthcare</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── VALUES ── -->
+<section class="values-section">
+  <div class="section-header reveal">
+    <div>
+      <p class="section-tag">Our Principles</p>
+      <h2 class="section-title">What we <em>stand</em> for</h2>
+    </div>
+    <p class="section-sub">The values that shape every design decision, feature, and interaction in this platform.</p>
+  </div>
+
+  <div class="values-grid">
+    <div class="value-card reveal">
+      <span class="value-emoji">🔍</span>
+      <h3>Transparency</h3>
+      <p>Every metric is explainable. No black boxes — just clear, honest data you can act on.</p>
+    </div>
+    <div class="value-card reveal" style="transition-delay:0.1s">
+      <span class="value-emoji">⚡</span>
+      <h3>Speed</h3>
+      <p>Insights should arrive in real time. Decisions made with fresh data move organisations forward.</p>
+    </div>
+    <div class="value-card reveal" style="transition-delay:0.2s">
+      <span class="value-emoji">🎯</span>
+      <h3>Precision</h3>
+      <p>We calculate efficiency, not just activity. The difference between busy and productive matters.</p>
+    </div>
+    <div class="value-card reveal" style="transition-delay:0.3s">
+      <span class="value-emoji">🌐</span>
+      <h3>Accessibility</h3>
+      <p>Powerful analytics shouldn't require a data science degree. Clarity is a design requirement.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<div class="cta-strip reveal">
+  <div class="cta-text">
+    <h2>Ready to see your workflows clearly?</h2>
+    <p>Start tracking tasks, measuring efficiency, and calculating your ROI — all in one place.</p>
+  </div>
+  <div class="cta-buttons">
+    <a href="workflow_tracker.html" class="btn-primary">Start Tracking Workflows</a>
+    <a href="roi.html" class="btn-ghost">↗ Calculate ROI</a>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="footer-logo">
+        <div class="footer-logo-dot"></div>
+        AI Productivity Platform
+      </div>
+      <p class="footer-tagline">Improving workflow efficiency and operational intelligence across industries.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="workflow_tracker.html">Workflow Tracker</a>
+        <a href="roi.html">ROI Calculator</a>
+        <a href="#">Analytics</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="about.html">About</a>
+        <a href="index.html">Home</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-copy">© 2026 AI Productivity Platform. All rights reserved.</p>
+    <p class="footer-badge">✦ Workflow Efficiency Research Project</p>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => {
+      if(el.isIntersecting){ el.target.classList.add('visible'); observer.unobserve(el.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

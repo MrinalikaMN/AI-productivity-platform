@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Tracker — AI Productivity Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --navy:#0b1f3a; --navy-mid:#0f2a5c; --navy-card:#0d2244;
+  --accent:#c8a96e; --accent-dim:rgba(200,169,110,0.12);
+  --white:#ffffff; --muted:rgba(255,255,255,0.45); --border:rgba(255,255,255,0.08);
+  --present:#72d49a; --absent:#f08080; --half:#e0c47a; --late:#7ba8f0; --leave:#b07ae0;
+}
+html { scroll-behavior:smooth; }
+body { font-family:'DM Sans',sans-serif; background:var(--navy); color:var(--white); margin:0; line-height:1.6; }
+
+/* NAVBAR */
+header { position:fixed; top:0; left:0; right:0; z-index:100; padding:0 64px; height:72px; display:flex; justify-content:space-between; align-items:center; background:rgba(11,31,58,0.9); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+.logo { font-family:'DM Serif Display',serif; font-size:20px; color:var(--white); text-decoration:none; display:flex; align-items:center; gap:10px; }
+.logo-dot { width:8px; height:8px; background:var(--accent); border-radius:50%; animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
+nav { display:flex; align-items:center; gap:28px; }
+nav a { text-decoration:none; color:var(--muted); font-size:14px; font-weight:500; transition:color .2s; position:relative; }
+nav a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1px; background:var(--accent); transition:width .3s; }
+nav a:hover { color:var(--white); } nav a:hover::after { width:100%; }
+nav a.active { color:var(--white); } nav a.active::after { width:100%; }
+.nav-cta { padding:9px 22px; background:var(--accent); color:var(--navy)!important; border-radius:8px; font-weight:600!important; font-size:13px!important; transition:all .2s!important; }
+.nav-cta::after { display:none!important; }
+.nav-cta:hover { background:#d4b87a!important; transform:translateY(-1px); box-shadow:0 6px 20px rgba(200,169,110,.35); }
+
+/* HERO */
+.page-hero { padding:130px 64px 56px; position:relative; overflow:hidden; }
+.page-hero::before { content:''; position:absolute; top:-80px; right:-80px; width:500px; height:500px; background:radial-gradient(circle,rgba(31,78,163,.14) 0%,transparent 70%); border-radius:50%; pointer-events:none; }
+.page-hero::after { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px); background-size:60px 60px; mask-image:radial-gradient(ellipse 70% 80% at 75% 30%,black 0%,transparent 100%); pointer-events:none; }
+.hero-inner { position:relative; z-index:1; max-width:1100px; display:flex; justify-content:space-between; align-items:flex-end; gap:40px; }
+.hero-eyebrow { display:inline-flex; align-items:center; gap:10px; font-size:11px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--accent); margin-bottom:20px; opacity:0; animation:fadeUp .6s .1s ease forwards; }
+.eyebrow-line { width:28px; height:1px; background:var(--accent); }
+.page-hero h1 { font-family:'DM Serif Display',serif; font-size:clamp(36px,4.5vw,56px); line-height:1.06; letter-spacing:-.8px; color:var(--white); margin-bottom:18px; opacity:0; animation:fadeUp .6s .22s ease forwards; }
+.page-hero h1 em { font-style:italic; color:var(--accent); }
+.page-hero p { font-size:16px; color:var(--muted); font-weight:300; max-width:480px; line-height:1.75; opacity:0; animation:fadeUp .6s .36s ease forwards; }
+.hero-date-card { background:var(--navy-card); border:1px solid var(--border); border-radius:16px; padding:28px 32px; min-width:280px; flex-shrink:0; opacity:0; animation:fadeUp .6s .5s ease forwards; }
+.hero-date-card label { font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:10px; }
+.hero-date-card input[type="date"] { width:100%; padding:12px 16px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:10px; color:var(--white); font-family:'DM Sans',sans-serif; font-size:15px; outline:none; transition:all .25s; cursor:pointer; }
+.hero-date-card input[type="date"]:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(200,169,110,.15); }
+.hero-date-card input[type="date"]::-webkit-calendar-picker-indicator { filter:invert(1) opacity(.5); cursor:pointer; }
+.hero-date-display { margin-top:12px; font-family:'DM Serif Display',serif; font-size:19px; color:var(--white); letter-spacing:-.3px; }
+
+/* STATS BAR */
+.stats-bar { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin:0 64px 48px; opacity:0; animation:fadeUp .6s .6s ease forwards; }
+.stat-tile { background:var(--navy-card); border:1px solid var(--border); border-radius:14px; padding:22px 24px; position:relative; overflow:hidden; transition:all .3s; }
+.stat-tile::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:0 2px 2px 0; }
+.stat-tile.s-present::before{background:var(--present)} .stat-tile.s-absent::before{background:var(--absent)}
+.stat-tile.s-late::before{background:var(--late)} .stat-tile.s-leave::before{background:var(--leave)}
+.stat-tile.s-eff::before{background:var(--accent)}
+.stat-tile:hover { background:rgba(255,255,255,.04); transform:translateY(-2px); }
+.stat-num { font-family:'DM Serif Display',serif; font-size:38px; line-height:1; margin-bottom:4px; }
+.s-present .stat-num{color:var(--present)} .s-absent .stat-num{color:var(--absent)}
+.s-late .stat-num{color:var(--late)} .s-leave .stat-num{color:var(--leave)}
+.s-eff .stat-num{color:var(--accent)}
+.stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; font-weight:500; }
+
+/* DIVIDER */
+.divider { height:1px; background:var(--border); margin:0 64px 48px; }
+
+/* TABS */
+.tabs-bar { display:flex; gap:4px; margin:0 64px 32px; background:var(--navy-card); border:1px solid var(--border); border-radius:12px; padding:6px; width:fit-content; }
+.tab-btn { padding:10px 26px; border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; background:transparent; color:var(--muted); transition:all .2s; }
+.tab-btn.active { background:var(--accent); color:var(--navy); font-weight:600; }
+.tab-btn:not(.active):hover { color:var(--white); background:rgba(255,255,255,.05); }
+
+/* LEGEND */
+.legend { display:flex; gap:20px; flex-wrap:wrap; margin:0 64px 24px; }
+.legend-item { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
+.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* FORM */
+.form-section { margin:0 64px 40px; background:var(--navy-card); border:1px solid var(--border); border-radius:20px; padding:40px; transition:border-color .3s, box-shadow .3s; }
+.form-section.editing { border-color:rgba(200,169,110,.45); box-shadow:0 0 0 3px rgba(200,169,110,.08); }
+.form-section-header { margin-bottom:28px; }
+.form-section-header h2 { font-family:'DM Serif Display',serif; font-size:22px; color:var(--white); margin-bottom:4px; }
+.form-section-header p { font-size:13px; color:var(--muted); }
+.emp-form-grid { display:grid; grid-template-columns:2fr 1.5fr 1fr 1fr auto auto; gap:16px; align-items:end; }
+.field-group { display:flex; flex-direction:column; gap:8px; }
+.field-group label { font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--muted); }
+.field-group input, .field-group select { padding:12px 16px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:10px; color:var(--white); font-family:'DM Sans',sans-serif; font-size:14px; outline:none; transition:all .25s; appearance:none; -webkit-appearance:none; }
+.field-group input::placeholder { color:rgba(255,255,255,.25); }
+.field-group input:focus, .field-group select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(200,169,110,.15); background:rgba(255,255,255,.09); }
+.field-group select option { background:#0d2244; }
+.add-btn { padding:12px 24px; background:var(--accent); color:var(--navy); border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .25s; }
+.add-btn:hover { background:#d4b87a; transform:translateY(-2px); box-shadow:0 8px 24px rgba(200,169,110,.3); }
+.add-btn.update { background:#7ba8f0; color:var(--navy); }
+.add-btn.update:hover { background:#5a8fd4; }
+.cancel-btn { padding:12px 18px; background:rgba(255,255,255,.05); color:var(--muted); border:1px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; transition:all .25s; display:none; white-space:nowrap; }
+.cancel-btn:hover { background:rgba(255,255,255,.1); color:var(--white); }
+
+/* TABLE */
+.section-panel { margin:0 64px 60px; }
+.panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+.panel-header h2 { font-family:'DM Serif Display',serif; font-size:26px; color:var(--white); }
+.panel-header p { font-size:13px; color:var(--muted); margin-top:4px; }
+.table-count { font-size:13px; color:var(--muted); background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:20px; padding:6px 16px; }
+.table-wrap { background:var(--navy-card); border:1px solid var(--border); border-radius:20px; overflow:hidden; overflow-x:auto; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+table { width:100%; border-collapse:collapse; min-width:900px; }
+thead tr { background:rgba(255,255,255,.04); border-bottom:1px solid var(--border); }
+th { text-align:left; font-size:11px; font-weight:600; color:rgba(255,255,255,.35); padding:14px 20px; text-transform:uppercase; letter-spacing:.8px; white-space:nowrap; }
+tbody tr { border-bottom:1px solid rgba(255,255,255,.04); transition:background .2s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:rgba(255,255,255,.025); }
+tbody tr.editing-row { background:rgba(200,169,110,.06); opacity:.45; }
+td { padding:16px 20px; font-size:13px; color:rgba(255,255,255,.7); white-space:nowrap; }
+.status-badge { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:600; }
+.badge-present{background:rgba(114,212,154,.15);color:var(--present);border:1px solid rgba(114,212,154,.25)}
+.badge-absent {background:rgba(240,128,128,.15);color:var(--absent); border:1px solid rgba(240,128,128,.25)}
+.badge-half   {background:rgba(224,196,122,.15);color:var(--half);   border:1px solid rgba(224,196,122,.25)}
+.badge-late   {background:rgba(123,168,240,.15);color:var(--late);   border:1px solid rgba(123,168,240,.25)}
+.badge-leave  {background:rgba(176,122,224,.15);color:var(--leave);  border:1px solid rgba(176,122,224,.25)}
+.eff-wrap { display:flex; align-items:center; gap:10px; }
+.eff-bar { width:80px; height:6px; background:rgba(255,255,255,.08); border-radius:3px; overflow:hidden; flex-shrink:0; }
+.eff-fill { height:100%; border-radius:3px; }
+.eff-high{color:var(--present)} .eff-mid{color:var(--half)} .eff-low{color:var(--absent)}
+.action-btn { padding:5px 12px; border:none; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; transition:all .2s; }
+.edit-btn   { background:rgba(200,169,110,.15); color:var(--accent); border:1px solid rgba(200,169,110,.25); margin-right:6px; }
+.edit-btn:hover   { background:rgba(200,169,110,.28); }
+.delete-btn { background:rgba(240,128,128,.15); color:var(--absent); border:1px solid rgba(240,128,128,.25); }
+.delete-btn:hover { background:rgba(240,128,128,.28); }
+
+/* MONTHLY / YEARLY */
+.month-controls, .year-controls { display:flex; align-items:center; gap:16px; margin:0 64px 28px; }
+.nav-btn { width:36px; height:36px; border-radius:8px; border:1px solid var(--border); background:var(--navy-card); color:var(--white); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+.period-label { font-family:'DM Serif Display',serif; font-size:22px; color:var(--white); min-width:220px; text-align:center; }
+.summary-grid { margin:0 64px 60px; display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:16px; }
+.emp-card { background:var(--navy-card); border:1px solid var(--border); border-radius:16px; padding:28px; transition:all .3s; }
+.emp-card:hover { border-color:rgba(200,169,110,.2); transform:translateY(-2px); box-shadow:0 12px 36px rgba(0,0,0,.2); }
+.emp-name-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.emp-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--navy-mid),#1f4ea3); border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'DM Serif Display',serif; font-size:16px; color:var(--accent); flex-shrink:0; }
+.emp-info { flex:1; margin-left:12px; }
+.emp-info strong { display:block; font-size:15px; font-weight:600; color:var(--white); }
+.emp-info span { font-size:12px; color:var(--muted); }
+.eff-badge { font-family:'DM Serif Display',serif; font-size:22px; }
+.stats-row-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px; }
+.mini-stat { text-align:center; padding:10px 6px; border-radius:8px; background:rgba(255,255,255,.03); border:1px solid var(--border); }
+.mini-stat-num { font-weight:700; font-size:18px; margin-bottom:2px; }
+.mini-stat-num.c-present{color:var(--present)} .mini-stat-num.c-absent{color:var(--absent)}
+.mini-stat-num.c-late{color:var(--late)} .mini-stat-num.c-leave{color:var(--leave)}
+.mini-stat-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+.eff-bar-row { display:flex; align-items:center; gap:10px; }
+.eff-bar-lbl { font-size:11px; color:var(--muted); white-space:nowrap; }
+.eff-track { flex:1; height:8px; background:rgba(255,255,255,.06); border-radius:4px; overflow:hidden; }
+.eff-track-fill { height:100%; border-radius:4px; transition:width 1s ease; }
+.eff-val { font-size:13px; font-weight:600; white-space:nowrap; }
+
+/* Yearly month mini-bars */
+.yr-months { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin:14px 0 16px; }
+.yr-col { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.yr-bar-wrap { width:100%; height:44px; background:rgba(255,255,255,.04); border-radius:4px; display:flex; align-items:flex-end; overflow:hidden; }
+.yr-bar { width:100%; border-radius:3px 3px 0 0; min-height:0; transition:height .8s ease; }
+.yr-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.3px; }
+
+/* EMPTY STATE */
+.empty-state { text-align:center; padding:60px 40px; color:var(--muted); }
+.empty-state .es-icon { font-size:36px; margin-bottom:12px; }
+.empty-state .es-text { font-size:14px; }
+.hidden { display:none!important; }
+
+/* FOOTER */
+footer { background:#060f1e; border-top:1px solid var(--border); padding:40px 64px; display:flex; justify-content:space-between; align-items:center; }
+.footer-copy { font-size:13px; color:rgba(255,255,255,.2); }
+.footer-badge { font-size:12px; color:rgba(255,255,255,.18); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+@media(max-width:1100px){
+  header,.page-hero{padding-left:40px;padding-right:40px}
+  .stats-bar,.tabs-bar,.form-section,.section-panel,.month-controls,.year-controls,.summary-grid,.legend,.divider{margin-left:40px;margin-right:40px}
+  .stats-bar{grid-template-columns:repeat(3,1fr)}
+  .emp-form-grid{grid-template-columns:1fr 1fr}
+  .hero-inner{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:700px){
+  header{padding:0 24px}
+  .page-hero{padding:110px 24px 40px}
+  .stats-bar,.tabs-bar,.form-section,.section-panel,.month-controls,.year-controls,.summary-grid,.legend,.divider{margin-left:24px;margin-right:24px}
+  .stats-bar{grid-template-columns:1fr 1fr}
+  .emp-form-grid{grid-template-columns:1fr}
+  footer{padding:32px 24px;flex-direction:column;gap:10px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header>
+  <a href="index.html" class="logo"><div class="logo-dot"></div>AI Productivity</a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="workflow_tracker.html">Workflow Tracker</a>
+    <a href="attendance.html" class="active">Attendance</a>
+    <a href="roi.html">ROI Calculator</a>
+    <a href="about.html">About</a>
+    <a href="workflow_tracker.html" class="nav-cta">Get Started</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-eyebrow"><span class="eyebrow-line"></span>Attendance Intelligence</div>
+      <h1>Track every day,<br>every <em>employee.</em></h1>
+      <p>Mark daily attendance, monitor monthly and yearly trends, and measure employee efficiency — all in one unified dashboard.</p>
+    </div>
+    <div class="hero-date-card">
+      <label>Select Date</label>
+      <input type="date" id="selectedDate">
+      <div class="hero-date-display" id="displayDate">—</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS — only for selected date -->
+<div class="stats-bar">
+  <div class="stat-tile s-present"><div class="stat-num" id="sPresent">0</div><div class="stat-label">Present</div></div>
+  <div class="stat-tile s-absent"><div class="stat-num" id="sAbsent">0</div><div class="stat-label">Absent</div></div>
+  <div class="stat-tile s-late"><div class="stat-num" id="sLate">0</div><div class="stat-label">Late / Half Day</div></div>
+  <div class="stat-tile s-leave"><div class="stat-num" id="sLeave">0</div><div class="stat-label">On Leave</div></div>
+  <div class="stat-tile s-eff"><div class="stat-num" id="sEff">—</div><div class="stat-label">Attendance Rate</div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <button class="tab-btn active"  onclick="switchTab('daily')">Daily View</button>
+  <button class="tab-btn"         onclick="switchTab('monthly')">Monthly Summary</button>
+  <button class="tab-btn"         onclick="switchTab('yearly')">Yearly Summary</button>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--present)"></div>Present</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--absent)"></div>Absent</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--half)"></div>Half Day</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--late)"></div>Late</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--leave)"></div>On Leave</div>
+</div>
+
+<!-- FORM -->
+<div class="form-section" id="addForm">
+  <div class="form-section-header">
+    <h2 id="formTitle">Mark Attendance</h2>
+    <p id="formSubtitle">Add an employee entry for the selected date.</p>
+  </div>
+  <div class="emp-form-grid">
+    <div class="field-group">
+      <label>Employee Name</label>
+      <input type="text" id="empName" placeholder="e.g. Priya Mehta">
+    </div>
+    <div class="field-group">
+      <label>Department</label>
+      <select id="empDept">
+        <option>Software</option><option>Education</option><option>Logistics</option>
+        <option>Operations</option><option>Finance</option><option>HR</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>Status</label>
+      <select id="empStatus">
+        <option>Present</option><option>Absent</option><option>Half Day</option>
+        <option>Late</option><option>On Leave</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>Hours Worked</label>
+      <input type="number" id="empHours" placeholder="e.g. 8" min="0" max="24" step="0.5">
+    </div>
+    <div><button class="add-btn" id="submitBtn" onclick="submitEntry()">+ Add Entry</button></div>
+    <div><button class="cancel-btn" id="cancelBtn" onclick="cancelEdit()">✕ Cancel</button></div>
+  </div>
+</div>
+
+<!-- DAILY PANEL -->
+<div class="section-panel" id="dailyPanel">
+  <div class="panel-header">
+    <div>
+      <h2>Daily Attendance</h2>
+      <p id="dailySubtitle">Showing records for today</p>
+    </div>
+    <span class="table-count" id="dailyCount">0 records</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Employee</th><th>Department</th><th>Date</th>
+          <th>Status</th><th>Hours</th><th>Efficiency</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="dailyBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MONTHLY PANEL -->
+<div id="monthlyPanel" class="hidden">
+  <div class="month-controls">
+    <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+    <div class="period-label" id="monthLabel">—</div>
+    <button class="nav-btn" onclick="changeMonth(1)">›</button>
+  </div>
+  <div class="summary-grid" id="monthlyGrid"></div>
+</div>
+
+<!-- YEARLY PANEL -->
+<div id="yearlyPanel" class="hidden">
+  <div class="year-controls">
+    <button class="nav-btn" onclick="changeYear(-1)">‹</button>
+    <div class="period-label" id="yearLabel">—</div>
+    <button class="nav-btn" onclick="changeYear(1)">›</button>
+  </div>
+  <div class="summary-grid" id="yearlyGrid"></div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p class="footer-copy">© 2026 AI Productivity Platform. All rights reserved.</p>
+  <p class="footer-badge">✦ Attendance & Efficiency Research Project</p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════
+   DATA
+═══════════════════════════════════════ */
+let records = [], idCounter = 1, editingId = null
+const STD = 9
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+function todayStr(){ return new Date().toISOString().slice(0,10) }
+function currentDate(){ return document.getElementById('selectedDate').value || todayStr() }
+
+function formatDate(s){
+  const d = new Date(s+'T00:00:00')
+  return d.toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+}
+function monthKey(s){ return s.slice(0,7) }
+function yearKey(s) { return s.slice(0,4) }
+function monthName(ym){
+  const[y,m]=ym.split('-')
+  return new Date(+y,+m-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'})
+}
+
+/* ── Efficiency ── */
+function calcEff(status, hours){
+  if(status==='Absent')   return 0
+  if(status==='On Leave') return null
+  const h=parseFloat(hours)||0
+  return h ? Math.min(120, Math.round((h/STD)*100)) : 0
+}
+function effColor(e){
+  if(e===null) return 'var(--leave)'
+  return e>=90 ? 'var(--present)' : e>=60 ? 'var(--half)' : 'var(--absent)'
+}
+function effClass(e){
+  if(e===null) return ''
+  return e>=90 ? 'eff-high' : e>=60 ? 'eff-mid' : 'eff-low'
+}
+
+/* ── Badges ── */
+function statusBadge(s){
+  const m={'Present':['badge-present','●'],'Absent':['badge-absent','●'],'Half Day':['badge-half','◐'],'Late':['badge-late','◷'],'On Leave':['badge-leave','✦']}
+  const[cls,ico]=m[s]||['badge-present','●']
+  return `<span class="status-badge ${cls}">${ico} ${s}</span>`
+}
+function deptColor(d){
+  return {'Software':'#7ba8f0','Education':'#72d49a','Logistics':'#e0c47a','Operations':'#f08080','Finance':'#c8a96e','HR':'#b07ae0'}[d]||'#aaa'
+}
+
+/* ═══════════════════════════════════════
+   DAILY RENDER
+═══════════════════════════════════════ */
+function renderDaily(){
+  const body = document.getElementById('dailyBody')
+  body.innerHTML = ''
+  // ← strictly filtered to selected date only
+  const rows = records.filter(r => r.date === currentDate()).sort((a,b)=>a.name.localeCompare(b.name))
+
+  document.getElementById('dailyCount').textContent    = rows.length+(rows.length===1?' record':' records')
+  document.getElementById('dailySubtitle').textContent = 'Showing records for '+formatDate(currentDate())
+
+  if(!rows.length){
+    body.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="es-icon">📋</div><div class="es-text">No records for this date. Add entries above.</div></div></td></tr>`
+    updateStats([])
+    return
+  }
+
+  rows.forEach((r,i)=>{
+    const eff = calcEff(r.status, r.hours)
+    const effHTML = eff===null
+      ? `<span style="color:var(--leave);font-size:12px">On Leave</span>`
+      : `<div class="eff-wrap"><div class="eff-bar"><div class="eff-fill" style="width:${Math.min(eff,100)}%;background:${effColor(eff)}"></div></div><span class="${effClass(eff)}" style="font-size:12px;font-weight:600">${eff}%</span></div>`
+    const hrs = r.hours&&r.hours!='0' ? r.hours+'h' : `<span style="color:var(--muted)">—</span>`
+    const tr = document.createElement('tr')
+    if(r.id===editingId) tr.classList.add('editing-row')
+    tr.innerHTML=`
+      <td style="color:var(--muted);font-size:12px">${i+1}</td>
+      <td><span style="font-weight:500;color:var(--white)">${r.name}</span></td>
+      <td><span style="font-size:12px;font-weight:600;color:${deptColor(r.dept)}">${r.dept}</span></td>
+      <td style="color:var(--muted);font-size:12px">${r.date}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td style="font-weight:500">${hrs}</td>
+      <td>${effHTML}</td>
+      <td>
+        <button class="action-btn edit-btn"   onclick="editRecord(${r.id})">Edit</button>
+        <button class="action-btn delete-btn" onclick="deleteRecord(${r.id})">Remove</button>
+      </td>`
+    body.appendChild(tr)
+  })
+  updateStats(rows)
+}
+
+/* ── Stats bar: only selected date ── */
+function updateStats(rows){
+  let p=0,a=0,l=0,lv=0
+  rows.forEach(r=>{
+    if(r.status==='Present') p++
+    else if(r.status==='Absent') a++
+    else if(r.status==='Half Day'||r.status==='Late') l++
+    else if(r.status==='On Leave') lv++
+  })
+  const counted = rows.length - lv
+  document.getElementById('sPresent').textContent = p
+  document.getElementById('sAbsent').textContent  = a
+  document.getElementById('sLate').textContent    = l
+  document.getElementById('sLeave').textContent   = lv
+  document.getElementById('sEff').textContent     = counted>0 ? Math.round((p/counted)*100)+'%' : '—'
+}
+
+/* ═══════════════════════════════════════
+   ADD / EDIT / DELETE
+═══════════════════════════════════════ */
+function submitEntry(){
+  const name   = document.getElementById('empName').value.trim()
+  const dept   = document.getElementById('empDept').value
+  const status = document.getElementById('empStatus').value
+  const hours  = document.getElementById('empHours').value||'0'
+  if(!name){ document.getElementById('empName').focus(); return }
+
+  if(editingId!==null){
+    const rec = records.find(r=>r.id===editingId)
+    if(rec){ rec.name=name; rec.dept=dept; rec.status=status; rec.hours=hours }
+    cancelEdit()
+  } else {
+    records.push({id:idCounter++, name, dept, date:currentDate(), status, hours})
+    clearInputs()
+  }
+  renderDaily()
+  if(activeTab==='monthly') renderMonthly()
+  if(activeTab==='yearly')  renderYearly()
+}
+
+function editRecord(id){
+  const rec = records.find(r=>r.id===id)
+  if(!rec) return
+  editingId = id
+  document.getElementById('empName').value   = rec.name
+  document.getElementById('empDept').value   = rec.dept
+  document.getElementById('empStatus').value = rec.status
+  document.getElementById('empHours').value  = rec.hours!=='0' ? rec.hours : ''
+  document.getElementById('formTitle').textContent    = 'Edit Attendance Record'
+  document.getElementById('formSubtitle').textContent = `Editing: ${rec.name} — ${rec.date}`
+  document.getElementById('submitBtn').textContent    = '✓ Save Changes'
+  document.getElementById('submitBtn').classList.add('update')
+  document.getElementById('cancelBtn').style.display  = 'block'
+  document.getElementById('addForm').classList.add('editing')
+  document.getElementById('addForm').scrollIntoView({behavior:'smooth',block:'start'})
+  renderDaily()
+}
+
+function cancelEdit(){
+  editingId = null
+  clearInputs()
+  document.getElementById('formTitle').textContent    = 'Mark Attendance'
+  document.getElementById('formSubtitle').textContent = 'Add an employee entry for the selected date.'
+  document.getElementById('submitBtn').textContent    = '+ Add Entry'
+  document.getElementById('submitBtn').classList.remove('update')
+  document.getElementById('cancelBtn').style.display  = 'none'
+  document.getElementById('addForm').classList.remove('editing')
+  renderDaily()
+}
+
+function clearInputs(){
+  document.getElementById('empName').value   = ''
+  document.getElementById('empHours').value  = ''
+  document.getElementById('empStatus').value = 'Present'
+  document.getElementById('empDept').value   = 'Software'
+}
+
+function deleteRecord(id){
+  if(id===editingId) cancelEdit()
+  records = records.filter(r=>r.id!==id)
+  renderDaily()
+  if(activeTab==='monthly') renderMonthly()
+  if(activeTab==='yearly')  renderYearly()
+}
+
+/* ═══════════════════════════════════════
+   SHARED SUMMARY BUILDER
+═══════════════════════════════════════ */
+function buildSummary(recs){
+  let p=0,a=0,l=0,lv=0,effSum=0,effN=0
+  recs.forEach(r=>{
+    if(r.status==='Present')   p++
+    else if(r.status==='Absent')    a++
+    else if(r.status==='Half Day'){ l++; p+=0.5 }
+    else if(r.status==='Late')      l++
+    else if(r.status==='On Leave')  lv++
+    const e=calcEff(r.status,r.hours)
+    if(e!==null){ effSum+=e; effN++ }
+  })
+  return { present:p, absent:a, late:l, leave:lv, avgEff: effN ? Math.round(effSum/effN) : 0 }
+}
+
+function cardHTML(emp, s, extra=''){
+  const clr = effColor(s.avgEff)
+  const ini = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+  return `
+    <div class="emp-name-row">
+      <div class="emp-avatar">${ini}</div>
+      <div class="emp-info"><strong>${emp.name}</strong><span>${emp.dept}</span></div>
+      <div class="eff-badge" style="color:${clr}">${s.avgEff}%</div>
+    </div>
+    <div class="stats-row-4">
+      <div class="mini-stat"><div class="mini-stat-num c-present">${s.present}</div><div class="mini-stat-lbl">Present</div></div>
+      <div class="mini-stat"><div class="mini-stat-num c-absent">${s.absent}</div><div class="mini-stat-lbl">Absent</div></div>
+      <div class="mini-stat"><div class="mini-stat-num c-late">${s.late}</div><div class="mini-stat-lbl">Late</div></div>
+      <div class="mini-stat"><div class="mini-stat-num c-leave">${s.leave}</div><div class="mini-stat-lbl">Leave</div></div>
+    </div>
+    ${extra}
+    <div class="eff-bar-row">
+      <span class="eff-bar-lbl">Efficiency</span>
+      <div class="eff-track"><div class="eff-track-fill" style="width:${Math.min(s.avgEff,100)}%;background:${clr}"></div></div>
+      <span class="eff-val" style="color:${clr}">${s.avgEff}%</span>
+    </div>`
+}
+
+/* ═══════════════════════════════════════
+   MONTHLY
+═══════════════════════════════════════ */
+let currentMonth = monthKey(todayStr())
+
+function changeMonth(d){
+  const[y,m]=currentMonth.split('-').map(Number)
+  const dt=new Date(y,m-1+d,1)
+  currentMonth=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`
+  renderMonthly()
+}
+
+function renderMonthly(){
+  document.getElementById('monthLabel').textContent = monthName(currentMonth)
+  const grid = document.getElementById('monthlyGrid')
+  grid.innerHTML = ''
+  const mRecs = records.filter(r=>r.date.startsWith(currentMonth))
+  const map = {}
+  mRecs.forEach(r=>{ if(!map[r.name]) map[r.name]={name:r.name,dept:r.dept,recs:[]}; map[r.name].recs.push(r) })
+  const emps = Object.values(map).sort((a,b)=>a.name.localeCompare(b.name))
+  if(!emps.length){
+    grid.innerHTML=`<div style="grid-column:1/-1"><div class="empty-state"><div class="es-icon">📅</div><div class="es-text">No records for ${monthName(currentMonth)}.</div></div></div>`
+    return
+  }
+  emps.forEach(emp=>{
+    const s=buildSummary(emp.recs)
+    const card=document.createElement('div')
+    card.className='emp-card'
+    card.innerHTML=cardHTML(emp,s)
+    grid.appendChild(card)
+  })
+}
+
+/* ═══════════════════════════════════════
+   YEARLY
+═══════════════════════════════════════ */
+let currentYear = yearKey(todayStr())
+
+function changeYear(d){
+  currentYear = String(+currentYear+d)
+  renderYearly()
+}
+
+function renderYearly(){
+  document.getElementById('yearLabel').textContent = currentYear
+  const grid = document.getElementById('yearlyGrid')
+  grid.innerHTML = ''
+  const yRecs = records.filter(r=>r.date.startsWith(currentYear))
+  const map = {}
+  yRecs.forEach(r=>{ if(!map[r.name]) map[r.name]={name:r.name,dept:r.dept,recs:[]}; map[r.name].recs.push(r) })
+  const emps = Object.values(map).sort((a,b)=>a.name.localeCompare(b.name))
+  if(!emps.length){
+    grid.innerHTML=`<div style="grid-column:1/-1"><div class="empty-state"><div class="es-icon">📆</div><div class="es-text">No records for ${currentYear}. Add attendance via Daily View first.</div></div></div>`
+    return
+  }
+  emps.forEach(emp=>{
+    const s = buildSummary(emp.recs)
+    // Per-month mini bar chart
+    const bars = MON.map((mn,mi)=>{
+      const ms=`${currentYear}-${String(mi+1).padStart(2,'0')}`
+      const mr=emp.recs.filter(r=>r.date.startsWith(ms))
+      if(!mr.length) return `<div class="yr-col"><div class="yr-bar-wrap"><div class="yr-bar" style="height:0"></div></div><div class="yr-lbl">${mn}</div></div>`
+      const ms2=buildSummary(mr)
+      const h=Math.max(6,Math.round((ms2.avgEff/120)*100))
+      return `<div class="yr-col" title="${mn}: ${ms2.avgEff}% eff, ${mr.length} days"><div class="yr-bar-wrap"><div class="yr-bar" style="height:${h}%;background:${effColor(ms2.avgEff)}"></div></div><div class="yr-lbl">${mn}</div></div>`
+    }).join('')
+    const extra=`<div class="yr-months">${bars}</div>`
+    const card=document.createElement('div')
+    card.className='emp-card'
+    card.innerHTML=cardHTML(emp,s,extra)
+    grid.appendChild(card)
+  })
+}
+
+/* ═══════════════════════════════════════
+   TABS
+═══════════════════════════════════════ */
+let activeTab='daily'
+
+function switchTab(tab){
+  activeTab=tab
+  const names=['daily','monthly','yearly']
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',names[i]===tab))
+  document.getElementById('dailyPanel').classList.toggle('hidden',  tab!=='daily')
+  document.getElementById('addForm').classList.toggle('hidden',     tab!=='daily')
+  document.getElementById('monthlyPanel').classList.toggle('hidden',tab!=='monthly')
+  document.getElementById('yearlyPanel').classList.toggle('hidden', tab!=='yearly')
+  if(tab==='monthly') renderMonthly()
+  if(tab==='yearly')  renderYearly()
+}
+
+/* ── Date input ── */
+document.getElementById('selectedDate').addEventListener('change',function(){
+  document.getElementById('displayDate').textContent=formatDate(this.value)
+  if(editingId!==null) cancelEdit()
+  renderDaily()
+})
+
+/* ═══════════════════════════════════════
+   PRELOADED DATA
+═══════════════════════════════════════ */
+window.onload=function(){
+  const today=todayStr()
+
+  const seed=[
+
+    // ── TODAY (22 Mar 2026) ──────────────────────────────────────────
+    ['Aarav Sharma',    'Software',   'Present',  '9',   today],
+    ['Neha Patel',      'Software',   'Present',  '8.5', today],
+    ['Rohan Gupta',     'Software',   'Late',     '7',   today],
+    ['Ananya Singh',    'Software',   'Present',  '9',   today],
+    ['Vikram Rao',      'Software',   'Absent',   '0',   today],
+    ['Divya Iyer',      'Education',  'Present',  '8',   today],
+    ['Arjun Nair',      'Education',  'Half Day', '4.5', today],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   today],
+    ['Sunita Rao',      'Logistics',  'On Leave', '0',   today],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   today],
+    ['Meera Kapoor',    'Operations', 'Late',     '6.5', today],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   today],
+    ['Pooja Verma',     'HR',         'Present',  '8',   today],
+
+    // ── FEBRUARY 2026 ────────────────────────────────────────────────
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-02-03'],
+    ['Aarav Sharma',    'Software',   'Present',  '8',   '2026-02-06'],
+    ['Aarav Sharma',    'Software',   'Absent',   '0',   '2026-02-10'],
+    ['Aarav Sharma',    'Software',   'Late',     '7',   '2026-02-17'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-02-20'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2026-02-03'],
+    ['Neha Patel',      'Software',   'On Leave', '0',   '2026-02-06'],
+    ['Neha Patel',      'Software',   'Present',  '8.5', '2026-02-10'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2026-02-17'],
+    ['Rohan Gupta',     'Software',   'Present',  '9',   '2026-02-03'],
+    ['Rohan Gupta',     'Software',   'Late',     '6.5', '2026-02-10'],
+    ['Rohan Gupta',     'Software',   'Present',  '9',   '2026-02-17'],
+    ['Ananya Singh',    'Software',   'Present',  '9',   '2026-02-03'],
+    ['Ananya Singh',    'Software',   'Present',  '9',   '2026-02-10'],
+    ['Ananya Singh',    'Software',   'Half Day', '4.5', '2026-02-17'],
+    ['Vikram Rao',      'Software',   'Absent',   '0',   '2026-02-03'],
+    ['Vikram Rao',      'Software',   'Present',  '8',   '2026-02-10'],
+    ['Vikram Rao',      'Software',   'Present',  '9',   '2026-02-17'],
+    ['Divya Iyer',      'Education',  'Present',  '8.5', '2026-02-03'],
+    ['Divya Iyer',      'Education',  'Half Day', '4',   '2026-02-08'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2026-02-14'],
+    ['Arjun Nair',      'Education',  'Present',  '9',   '2026-02-03'],
+    ['Arjun Nair',      'Education',  'Present',  '8',   '2026-02-10'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2026-02-03'],
+    ['Kiran Desai',     'Logistics',  'Absent',   '0',   '2026-02-09'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2026-02-14'],
+    ['Sunita Rao',      'Logistics',  'Present',  '9',   '2026-02-03'],
+    ['Sunita Rao',      'Logistics',  'On Leave', '0',   '2026-02-10'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2026-02-03'],
+    ['Rahul Bose',      'Operations', 'On Leave', '0',   '2026-02-07'],
+    ['Rahul Bose',      'Operations', 'Present',  '8',   '2026-02-14'],
+    ['Meera Kapoor',    'Operations', 'Late',     '6',   '2026-02-03'],
+    ['Meera Kapoor',    'Operations', 'Present',  '9',   '2026-02-10'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2026-02-03'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '8.5', '2026-02-10'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2026-02-03'],
+    ['Pooja Verma',     'HR',         'Absent',   '0',   '2026-02-09'],
+    ['Pooja Verma',     'HR',         'Present',  '8',   '2026-02-17'],
+
+    // ── JANUARY 2026 ─────────────────────────────────────────────────
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-01-05'],
+    ['Aarav Sharma',    'Software',   'Present',  '8',   '2026-01-12'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-01-19'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2026-01-05'],
+    ['Neha Patel',      'Software',   'Late',     '7',   '2026-01-12'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2026-01-19'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2026-01-05'],
+    ['Divya Iyer',      'Education',  'Present',  '8.5', '2026-01-12'],
+    ['Kiran Desai',     'Logistics',  'Half Day', '4.5', '2026-01-05'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2026-01-12'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2026-01-05'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2026-01-05'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2026-01-12'],
+    ['Pooja Verma',     'HR',         'Late',     '7',   '2026-01-05'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2026-01-12'],
+
+    // ── APRIL 2026 ───────────────────────────────────────────────────
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-04-01'],
+    ['Aarav Sharma',    'Software',   'Present',  '8.5', '2026-04-03'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-04-07'],
+    ['Aarav Sharma',    'Software',   'Late',     '7',   '2026-04-10'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-04-14'],
+    ['Aarav Sharma',    'Software',   'Absent',   '0',   '2026-04-17'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-04-22'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2026-04-01'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2026-04-04'],
+    ['Neha Patel',      'Software',   'Half Day', '4.5', '2026-04-08'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2026-04-14'],
+    ['Neha Patel',      'Software',   'Present',  '8.5', '2026-04-21'],
+    ['Rohan Gupta',     'Software',   'Late',     '6.5', '2026-04-01'],
+    ['Rohan Gupta',     'Software',   'Present',  '9',   '2026-04-07'],
+    ['Rohan Gupta',     'Software',   'Present',  '9',   '2026-04-14'],
+    ['Rohan Gupta',     'Software',   'Absent',   '0',   '2026-04-21'],
+    ['Ananya Singh',    'Software',   'Present',  '9',   '2026-04-01'],
+    ['Ananya Singh',    'Software',   'Present',  '9',   '2026-04-08'],
+    ['Ananya Singh',    'Software',   'Present',  '8',   '2026-04-15'],
+    ['Ananya Singh',    'Software',   'Present',  '9',   '2026-04-22'],
+    ['Vikram Rao',      'Software',   'Present',  '8',   '2026-04-01'],
+    ['Vikram Rao',      'Software',   'Absent',   '0',   '2026-04-07'],
+    ['Vikram Rao',      'Software',   'Present',  '9',   '2026-04-14'],
+    ['Vikram Rao',      'Software',   'Late',     '7',   '2026-04-22'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2026-04-01'],
+    ['Divya Iyer',      'Education',  'Present',  '8.5', '2026-04-07'],
+    ['Divya Iyer',      'Education',  'On Leave', '0',   '2026-04-10'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2026-04-14'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2026-04-21'],
+    ['Arjun Nair',      'Education',  'Present',  '9',   '2026-04-01'],
+    ['Arjun Nair',      'Education',  'Half Day', '4',   '2026-04-08'],
+    ['Arjun Nair',      'Education',  'Present',  '9',   '2026-04-15'],
+    ['Arjun Nair',      'Education',  'Present',  '8',   '2026-04-22'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2026-04-01'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2026-04-07'],
+    ['Kiran Desai',     'Logistics',  'Absent',   '0',   '2026-04-11'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2026-04-16'],
+    ['Kiran Desai',     'Logistics',  'Present',  '8.5', '2026-04-22'],
+    ['Sunita Rao',      'Logistics',  'On Leave', '0',   '2026-04-01'],
+    ['Sunita Rao',      'Logistics',  'Present',  '9',   '2026-04-07'],
+    ['Sunita Rao',      'Logistics',  'Present',  '8',   '2026-04-14'],
+    ['Sunita Rao',      'Logistics',  'Late',     '6.5', '2026-04-22'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2026-04-01'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2026-04-08'],
+    ['Rahul Bose',      'Operations', 'Present',  '8',   '2026-04-15'],
+    ['Rahul Bose',      'Operations', 'On Leave', '0',   '2026-04-22'],
+    ['Meera Kapoor',    'Operations', 'Late',     '6',   '2026-04-01'],
+    ['Meera Kapoor',    'Operations', 'Present',  '9',   '2026-04-08'],
+    ['Meera Kapoor',    'Operations', 'Present',  '8.5', '2026-04-15'],
+    ['Meera Kapoor',    'Operations', 'Absent',   '0',   '2026-04-22'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2026-04-01'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2026-04-08'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '8.5', '2026-04-15'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2026-04-22'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2026-04-01'],
+    ['Pooja Verma',     'HR',         'Present',  '8',   '2026-04-08'],
+    ['Pooja Verma',     'HR',         'Half Day', '4.5', '2026-04-14'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2026-04-22'],
+
+    // ── MAY 2026 (project due month — fuller records) ─────────────────
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-05-01'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-05-05'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-05-08'],
+    ['Aarav Sharma',    'Software',   'Late',     '7.5', '2026-05-12'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-05-15'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-05-19'],
+    ['Aarav Sharma',    'Software',   'Present',  '8.5', '2026-05-22'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2026-05-26'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2026-05-01'],
+    ['Neha Patel',      'Software',   'Present',  '8.5', '2026-05-05'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2026-05-08'],
+    ['Neha Patel',      'Software',   'Absent',   '0',   '2026-05-13'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2026-05-15'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2026-05-20'],
+    ['Neha Patel',      'Software',   'Present',  '8',   '2026-05-26'],
+    ['Rohan Gupta',     'Software',   'Present',  '9',   '2026-05-01'],
+    ['Rohan Gupta',     'Software',   'Late',     '6',   '2026-05-06'],
+    ['Rohan Gupta',     'Software',   'Present',  '9',   '2026-05-12'],
+    ['Rohan Gupta',     'Software',   'Present',  '8',   '2026-05-19'],
+    ['Rohan Gupta',     'Software',   'Present',  '9',   '2026-05-26'],
+    ['Ananya Singh',    'Software',   'Present',  '9',   '2026-05-01'],
+    ['Ananya Singh',    'Software',   'Present',  '9',   '2026-05-07'],
+    ['Ananya Singh',    'Software',   'Present',  '9',   '2026-05-14'],
+    ['Ananya Singh',    'Software',   'Half Day', '4.5', '2026-05-19'],
+    ['Ananya Singh',    'Software',   'Present',  '9',   '2026-05-26'],
+    ['Vikram Rao',      'Software',   'Present',  '9',   '2026-05-01'],
+    ['Vikram Rao',      'Software',   'Present',  '8',   '2026-05-07'],
+    ['Vikram Rao',      'Software',   'Absent',   '0',   '2026-05-13'],
+    ['Vikram Rao',      'Software',   'Present',  '9',   '2026-05-20'],
+    ['Vikram Rao',      'Software',   'Present',  '9',   '2026-05-26'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2026-05-01'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2026-05-07'],
+    ['Divya Iyer',      'Education',  'Present',  '8.5', '2026-05-13'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2026-05-19'],
+    ['Divya Iyer',      'Education',  'On Leave', '0',   '2026-05-23'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2026-05-27'],
+    ['Arjun Nair',      'Education',  'Present',  '8',   '2026-05-01'],
+    ['Arjun Nair',      'Education',  'Present',  '9',   '2026-05-08'],
+    ['Arjun Nair',      'Education',  'Present',  '9',   '2026-05-15'],
+    ['Arjun Nair',      'Education',  'Late',     '7',   '2026-05-22'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2026-05-01'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2026-05-07'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2026-05-13'],
+    ['Kiran Desai',     'Logistics',  'Absent',   '0',   '2026-05-19'],
+    ['Kiran Desai',     'Logistics',  'Present',  '8.5', '2026-05-26'],
+    ['Sunita Rao',      'Logistics',  'Present',  '9',   '2026-05-01'],
+    ['Sunita Rao',      'Logistics',  'Present',  '9',   '2026-05-08'],
+    ['Sunita Rao',      'Logistics',  'Half Day', '4',   '2026-05-15'],
+    ['Sunita Rao',      'Logistics',  'Present',  '9',   '2026-05-22'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2026-05-01'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2026-05-07'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2026-05-14'],
+    ['Rahul Bose',      'Operations', 'Present',  '8',   '2026-05-21'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2026-05-27'],
+    ['Meera Kapoor',    'Operations', 'Present',  '9',   '2026-05-01'],
+    ['Meera Kapoor',    'Operations', 'Late',     '6.5', '2026-05-07'],
+    ['Meera Kapoor',    'Operations', 'Present',  '9',   '2026-05-14'],
+    ['Meera Kapoor',    'Operations', 'Present',  '8.5', '2026-05-21'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2026-05-01'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2026-05-07'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2026-05-14'],
+    ['Siddharth Kumar', 'Finance',    'Half Day', '4.5', '2026-05-20'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2026-05-27'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2026-05-01'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2026-05-08'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2026-05-15'],
+    ['Pooja Verma',     'HR',         'Present',  '8.5', '2026-05-22'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2026-05-27'],
+
+    // ── 2025 — FULL YEAR ─────────────────────────────────────────────
+    // Jan 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-01-06'],
+    ['Aarav Sharma',    'Software',   'Present',  '8.5', '2025-01-13'],
+    ['Aarav Sharma',    'Software',   'Absent',   '0',   '2025-01-20'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-01-27'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-01-06'],
+    ['Neha Patel',      'Software',   'Late',     '7',   '2025-01-13'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-01-20'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-01-06'],
+    ['Divya Iyer',      'Education',  'Present',  '8',   '2025-01-13'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-01-06'],
+    ['Kiran Desai',     'Logistics',  'Half Day', '4.5', '2025-01-13'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-01-06'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-01-06'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-01-06'],
+    ['Pooja Verma',     'HR',         'Absent',   '0',   '2025-01-13'],
+    // Feb 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-02-03'],
+    ['Aarav Sharma',    'Software',   'Present',  '8',   '2025-02-10'],
+    ['Aarav Sharma',    'Software',   'Late',     '7',   '2025-02-17'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-02-03'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-02-10'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-02-03'],
+    ['Divya Iyer',      'Education',  'On Leave', '0',   '2025-02-10'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-02-03'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-02-03'],
+    ['Rahul Bose',      'Operations', 'Absent',   '0',   '2025-02-10'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-02-03'],
+    ['Pooja Verma',     'HR',         'Present',  '8.5', '2025-02-03'],
+    // Mar 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-03-03'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-03-10'],
+    ['Aarav Sharma',    'Software',   'Present',  '8',   '2025-03-17'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-03-03'],
+    ['Neha Patel',      'Software',   'Half Day', '4',   '2025-03-10'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-03-17'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-03-03'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-03-10'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-03-03'],
+    ['Kiran Desai',     'Logistics',  'Late',     '6.5', '2025-03-10'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-03-03'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-03-03'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '8.5', '2025-03-10'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-03-03'],
+    // Apr 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-04-01'],
+    ['Aarav Sharma',    'Software',   'Absent',   '0',   '2025-04-07'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-04-14'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-04-01'],
+    ['Neha Patel',      'Software',   'Present',  '8.5', '2025-04-07'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-04-01'],
+    ['Divya Iyer',      'Education',  'Present',  '8',   '2025-04-07'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-04-01'],
+    ['Kiran Desai',     'Logistics',  'On Leave', '0',   '2025-04-07'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-04-01'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-04-01'],
+    ['Pooja Verma',     'HR',         'Late',     '6.5', '2025-04-01'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-04-07'],
+    // May 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-05-05'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-05-12'],
+    ['Aarav Sharma',    'Software',   'Late',     '7',   '2025-05-19'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-05-26'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-05-05'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-05-12'],
+    ['Neha Patel',      'Software',   'Present',  '8',   '2025-05-19'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-05-05'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-05-12'],
+    ['Divya Iyer',      'Education',  'Half Day', '4.5', '2025-05-19'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-05-05'],
+    ['Kiran Desai',     'Logistics',  'Present',  '8.5', '2025-05-12'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-05-05'],
+    ['Rahul Bose',      'Operations', 'Absent',   '0',   '2025-05-12'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-05-05'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-05-05'],
+    ['Pooja Verma',     'HR',         'Present',  '8',   '2025-05-12'],
+    // Jun 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-06-02'],
+    ['Aarav Sharma',    'Software',   'Present',  '8.5', '2025-06-09'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-06-02'],
+    ['Neha Patel',      'Software',   'On Leave', '0',   '2025-06-09'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-06-02'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-06-02'],
+    ['Kiran Desai',     'Logistics',  'Late',     '6',   '2025-06-09'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-06-02'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-06-02'],
+    ['Pooja Verma',     'HR',         'Absent',   '0',   '2025-06-02'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-06-09'],
+    // Jul 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-07-07'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-07-14'],
+    ['Aarav Sharma',    'Software',   'Absent',   '0',   '2025-07-21'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-07-07'],
+    ['Neha Patel',      'Software',   'Present',  '8',   '2025-07-14'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-07-07'],
+    ['Divya Iyer',      'Education',  'Half Day', '4',   '2025-07-14'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-07-07'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-07-07'],
+    ['Rahul Bose',      'Operations', 'Late',     '7',   '2025-07-14'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-07-07'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-07-07'],
+    // Aug 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-08-04'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-08-11'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-08-04'],
+    ['Neha Patel',      'Software',   'Late',     '7',   '2025-08-11'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-08-04'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-08-04'],
+    ['Kiran Desai',     'Logistics',  'Absent',   '0',   '2025-08-11'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-08-04'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-08-04'],
+    ['Siddharth Kumar', 'Finance',    'On Leave', '0',   '2025-08-11'],
+    ['Pooja Verma',     'HR',         'Present',  '8.5', '2025-08-04'],
+    // Sep 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-09-01'],
+    ['Aarav Sharma',    'Software',   'Present',  '8.5', '2025-09-08'],
+    ['Aarav Sharma',    'Software',   'Late',     '7',   '2025-09-15'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-09-01'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-09-08'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-09-01'],
+    ['Divya Iyer',      'Education',  'Present',  '8',   '2025-09-08'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-09-01'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-09-01'],
+    ['Rahul Bose',      'Operations', 'Half Day', '4.5', '2025-09-08'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-09-01'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-09-01'],
+    ['Pooja Verma',     'HR',         'Absent',   '0',   '2025-09-08'],
+    // Oct 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-10-06'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-10-13'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-10-06'],
+    ['Neha Patel',      'Software',   'Present',  '8.5', '2025-10-13'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-10-06'],
+    ['Divya Iyer',      'Education',  'On Leave', '0',   '2025-10-13'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-10-06'],
+    ['Kiran Desai',     'Logistics',  'Late',     '6.5', '2025-10-13'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-10-06'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-10-06'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-10-13'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-10-06'],
+    // Nov 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-11-03'],
+    ['Aarav Sharma',    'Software',   'Absent',   '0',   '2025-11-10'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-11-17'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-11-03'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-11-10'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-11-03'],
+    ['Divya Iyer',      'Education',  'Present',  '8',   '2025-11-10'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-11-03'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-11-03'],
+    ['Rahul Bose',      'Operations', 'Late',     '7',   '2025-11-10'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-11-03'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-11-03'],
+    ['Pooja Verma',     'HR',         'Half Day', '4',   '2025-11-10'],
+    // Dec 2025
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-12-01'],
+    ['Aarav Sharma',    'Software',   'Present',  '8.5', '2025-12-08'],
+    ['Aarav Sharma',    'Software',   'Present',  '9',   '2025-12-15'],
+    ['Aarav Sharma',    'Software',   'On Leave', '0',   '2025-12-22'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-12-01'],
+    ['Neha Patel',      'Software',   'Present',  '9',   '2025-12-08'],
+    ['Neha Patel',      'Software',   'Late',     '7',   '2025-12-15'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-12-01'],
+    ['Divya Iyer',      'Education',  'Present',  '9',   '2025-12-08'],
+    ['Divya Iyer',      'Education',  'Absent',   '0',   '2025-12-15'],
+    ['Kiran Desai',     'Logistics',  'Present',  '9',   '2025-12-01'],
+    ['Kiran Desai',     'Logistics',  'Present',  '8.5', '2025-12-08'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-12-01'],
+    ['Rahul Bose',      'Operations', 'Present',  '9',   '2025-12-08'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-12-01'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '9',   '2025-12-08'],
+    ['Siddharth Kumar', 'Finance',    'Present',  '8',   '2025-12-15'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-12-01'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-12-08'],
+    ['Pooja Verma',     'HR',         'Present',  '9',   '2025-12-15'],
+  ]
+
+  seed.forEach(([name,dept,status,hours,date])=>{
+    records.push({id:idCounter++,name,dept,date,status,hours})
+  })
+
+  const di=document.getElementById('selectedDate')
+  di.value=today
+  document.getElementById('displayDate').textContent=formatDate(today)
+  renderDaily()
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROI Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-mid: #0f2a5c;
+            --navy-light: #1f4ea3;
+            --accent: #c8a96e;
+            --accent-light: #e8d5a8;
+            --bg: #f4f6f9;
+            --white: #ffffff;
+            --text-muted: #6b7a99;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--navy);
+            overflow-x: hidden;
+        }
+
+        /* ── CALCULATOR SECTION ── */
+        .calculator-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            background: linear-gradient(145deg, #e8edf5 0%, #f4f6f9 60%, #eceef5 100%);
+            position: relative;
+        }
+
+        .calculator-section::before {
+            content: '';
+            position: absolute;
+            top: -80px; right: -80px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(15,42,92,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 48px;
+            border-radius: 28px;
+            border: 1px solid rgba(15,42,92,0.08);
+            box-shadow: 0 20px 60px rgba(11,31,58,0.10), 0 4px 16px rgba(11,31,58,0.06);
+            width: 100%;
+            max-width: 520px;
+            transition: max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: cardAppear 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+
+        .card.results-view { max-width: 1020px; }
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-content { transition: opacity 0.3s ease, transform 0.3s ease; }
+        .fade-out-left  { opacity: 0; transform: translateX(-20px); }
+        .fade-out-right { opacity: 0; transform: translateX(20px); }
+        .fade-in        { opacity: 1; transform: translateX(0); }
+
+        .title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 32px;
+            margin-bottom: 6px;
+            color: var(--navy);
+            text-align: center;
+            letter-spacing: -0.3px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            margin-bottom: 32px;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 400;
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 36px;
+        }
+
+        .progress-step {
+            height: 32px; width: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 600;
+            z-index: 2;
+            transition: all 0.4s ease;
+        }
+
+        .progress-step.active   { background: var(--navy-mid); color: white; box-shadow: 0 0 0 4px rgba(15,42,92,0.15); }
+        .progress-step.inactive { background: #e8edf5; color: var(--navy-mid); }
+
+        .progress-line {
+            height: 3px; flex-grow: 1;
+            background: #e0e6f0; margin: 0 -2px; z-index: 1;
+        }
+        .progress-line.active { background: var(--navy-mid); }
+
+        .form-group { display: flex; flex-direction: column; min-height: 120px; }
+
+        .label-group { display: flex; align-items: center; margin-bottom: 12px; }
+
+        .label { color: var(--navy); font-size: 16px; font-weight: 600; }
+
+        .input {
+            padding: 14px 18px;
+            width: 100%;
+            font-size: 16px;
+            font-family: 'DM Sans', sans-serif;
+            border: 1.5px solid #dde3ef;
+            border-radius: 12px;
+            outline: none;
+            background: #fafbfe;
+            transition: all 0.3s ease;
+            color: var(--navy);
+        }
+        .input:focus {
+            border-color: var(--navy-mid);
+            box-shadow: 0 0 0 4px rgba(15,42,92,0.10);
+            background: white;
+        }
+
+        .button-container { display: flex; gap: 12px; margin-top: 30px; }
+
+        .button {
+            padding: 14px 24px;
+            font-size: 14px; font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            border-radius: 12px;
+            border: none; cursor: pointer;
+            flex: 1;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .button.primary {
+            background: var(--navy);
+            color: white;
+        }
+        .button.primary:hover {
+            background: var(--navy-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(15,42,92,0.25);
+        }
+        .button.secondary {
+            background: #f0f3f9;
+            color: var(--navy);
+            border: 1.5px solid #dde3ef;
+        }
+        .button.secondary:hover { background: #e4e9f5; }
+
+        .summary-box {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin-bottom: 24px; padding: 16px;
+            background: #f7f9fd;
+            border-radius: 14px;
+            border: 1px solid #e8edf5;
+        }
+        .summary-item {
+            padding: 6px 14px;
+            background: white;
+            border-radius: 8px;
+            font-size: 13px;
+            border: 1px solid #eaeff8;
+            color: var(--text-muted);
+        }
+        .summary-item span { color: var(--navy-mid); font-weight: 700; }
+
+        .results-wrapper { width: 100%; overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(11,31,58,0.06);
+        }
+        th {
+            background: #f0f4fb;
+            color: var(--navy-mid);
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            border-bottom: 2px solid #dde3ef;
+        }
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f3f9;
+            font-size: 13px;
+            color: #4a5878;
+        }
+        tr.highlight-row { background: #fffbf0; }
+        tr.highlight-row td { font-weight: 700; color: var(--navy); }
+        tr:last-child td { border-bottom: none; }
+
+        .tooltip {
+            position: relative; display: inline-flex;
+            align-items: center; justify-content: center;
+            margin-left: 10px; width: 20px; height: 20px;
+            background: var(--navy-mid); color: white;
+            border-radius: 50%; font-size: 11px; cursor: help;
+        }
+        .tooltip-text {
+            visibility: hidden; width: 240px;
+            background: var(--navy); color: #fff;
+            text-align: left; border-radius: 10px;
+            padding: 12px; position: absolute; z-index: 1000;
+            bottom: 130%; left: 50%; margin-left: -120px;
+            opacity: 0; transition: opacity 0.3s;
+            font-size: 12px; line-height: 1.5;
+            pointer-events: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        .error-message { color: #c0392b; font-size: 12px; margin-top: 6px; display: none; }
+
+        .pricing-box {
+            background: #f0f4fb;
+            padding: 16px 24px;
+            border-radius: 14px;
+            margin-bottom: 28px;
+            border: 1px solid #dde3ef;
+            display: flex;
+            justify-content: space-around;
+        }
+        .pricing-item { text-align: center; }
+        .pricing-label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.5px; }
+        .pricing-value { font-weight: 700; color: var(--navy); font-size: 18px; }
+
+        /* ── INSIGHTS SECTION ── */
+        .insights-section {
+            background: var(--navy);
+            padding: 100px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .insights-section::before {
+            content: '';
+            position: absolute;
+            top: -120px; right: -120px;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(200,169,110,0.12) 0%, transparent 65%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .insights-section::after {
+            content: '';
+            position: absolute;
+            bottom: -80px; left: -80px;
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(31,78,163,0.25) 0%, transparent 65%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .insights-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .insights-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 64px;
+            gap: 40px;
+        }
+
+        .insights-header-left {}
+
+        .section-eyebrow {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 42px;
+            color: white;
+            line-height: 1.15;
+            letter-spacing: -0.5px;
+        }
+
+        .section-title em {
+            font-style: italic;
+            color: var(--accent);
+        }
+
+        .insights-header-right {
+            max-width: 360px;
+            flex-shrink: 0;
+        }
+
+        .insights-header-right p {
+            font-size: 15px;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.7;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            margin-bottom: 64px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .stat-item {
+            padding: 36px 28px;
+            background: rgba(255,255,255,0.03);
+            transition: background 0.3s ease;
+        }
+
+        .stat-item:hover { background: rgba(255,255,255,0.07); }
+
+        .stat-number {
+            font-family: 'DM Serif Display', serif;
+            font-size: 48px;
+            color: white;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-number span {
+            font-size: 28px;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.45);
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
+        /* Chart + Analysis layout */
+        .chart-analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .chart-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 36px;
+        }
+
+        .chart-card-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 6px;
+        }
+
+        .chart-card-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            color: white;
+            margin-bottom: 28px;
+        }
+
+        .analysis-card {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .analysis-intro {
+            background: rgba(200,169,110,0.08);
+            border: 1px solid rgba(200,169,110,0.2);
+            border-radius: 16px;
+            padding: 28px;
+        }
+
+        .analysis-intro p {
+            font-size: 15px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.75;
+        }
+
+        .analysis-intro p + p { margin-top: 12px; }
+
+        .insight-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 18px 22px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .insight-item:hover {
+            background: rgba(255,255,255,0.07);
+            transform: translateX(4px);
+            border-color: rgba(200,169,110,0.25);
+        }
+
+        .insight-icon {
+            font-size: 22px;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .insight-text {}
+
+        .insight-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 20px;
+            color: white;
+            line-height: 1;
+            margin-bottom: 3px;
+        }
+
+        .insight-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.45);
+            line-height: 1.4;
+        }
+
+        @media (max-width: 900px) {
+            .insights-section { padding: 70px 28px; }
+            .insights-header { flex-direction: column; align-items: flex-start; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .chart-analysis-grid { grid-template-columns: 1fr; }
+            .section-title { font-size: 32px; }
+        }
+
+        @media (max-width: 600px) {
+            .card { padding: 28px; }
+            th, td { padding: 10px; font-size: 11px; }
+            .card.results-view { max-width: 100%; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .stat-number { font-size: 36px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     CALCULATOR
+══════════════════════════════ -->
+<section class="calculator-section">
+    <div class="container">
+        <div class="card" id="main-card">
+            <div id="calculator-step-view">
+                <h1 class="title">ROI Calculator</h1>
+                <p class="subtitle">Enter your organisation details to project savings</p>
+
+                <div class="pricing-box">
+                    <div class="pricing-item">
+                        <div class="pricing-label">Price per FTE / mo</div>
+                        <div class="pricing-value">₹500</div>
+                    </div>
+                    <div class="pricing-item">
+                        <div class="pricing-label">Price per FTE / yr</div>
+                        <div class="pricing-value">₹6,000</div>
+                    </div>
+                </div>
+
+                <div class="progress-container" id="progress-container"></div>
+
+                <div class="form-group" id="form-container">
+                    <div id="step-content-wrapper" class="step-content"></div>
+                </div>
+
+                <div class="button-container">
+                    <button id="back-btn" class="button secondary" style="display:none;">Back</button>
+                    <button id="next-btn" class="button primary">Next</button>
+                </div>
+            </div>
+
+            <div id="calculator-results-view" style="display:none;">
+                <h1 class="title">ROI Analysis</h1>
+                <p class="subtitle">Dynamic projections based on provided inputs</p>
+                <div class="summary-box" id="inputs-summary"></div>
+                <div class="results-wrapper">
+                    <table id="results-table">
+                        <thead>
+                            <tr>
+                                <th>Overall Avg Improvement</th>
+                                <th>% Improvement</th>
+                                <th>Cost of Solution (₹)</th>
+                                <th>Savings (₹)</th>
+                                <th>ROI (x)</th>
+                                <th>FTE Added</th>
+                                <th>Payback (Months)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body"></tbody>
+                    </table>
+                </div>
+                <div class="button-container" style="justify-content:center; margin-top:28px;">
+                    <button id="reset-btn" class="button primary" style="max-width:240px;">Calculate Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════
+     INSIGHTS SECTION
+══════════════════════════════ -->
+<section class="insights-section">
+    <div class="insights-inner">
+
+        <!-- Header -->
+        <div class="insights-header">
+            <div class="insights-header-left">
+                <p class="section-eyebrow">Productivity Analysis</p>
+                <h2 class="section-title">AI impact across<br><em>every industry</em></h2>
+            </div>
+            <div class="insights-header-right">
+                <p>Manufacturing, IT, and Finance show the strongest gains — driven by automation, intelligent monitoring, and AI-assisted decision support.</p>
+            </div>
+        </div>
+
+        <!-- Key Stats -->
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-number">32<span>%</span></div>
+                <div class="stat-label">Average productivity<br>improvement</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">40<span>%</span></div>
+                <div class="stat-label">Average time<br>reduction</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">41<span>%</span></div>
+                <div class="stat-label">Peak gain in<br>Manufacturing</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">5<span>×</span></div>
+                <div class="stat-label">Industries<br>analysed</div>
+            </div>
+        </div>
+
+        <!-- Chart + Analysis -->
+        <div class="chart-analysis-grid">
+
+            <!-- Chart -->
+            <div class="chart-card">
+                <p class="chart-card-label">Performance breakdown</p>
+                <p class="chart-card-title">Productivity & Time Saved by Sector</p>
+                <canvas id="productivityChart"></canvas>
+            </div>
+
+            <!-- Analysis -->
+            <div class="analysis-card">
+                <div class="analysis-intro">
+                    <p>AI-assisted productivity tools deliver measurable gains across all sectors. Manufacturing leads with a <strong style="color:var(--accent)">41% productivity increase</strong> and <strong style="color:var(--accent)">50% time savings</strong>, driven by automation and predictive analytics.</p>
+                    <p>IT and Finance follow closely, benefiting from workflow automation, intelligent monitoring, and AI-powered decision support systems.</p>
+                </div>
+
+                <div class="insight-list">
+                    <div class="insight-item">
+                        <div class="insight-icon">📈</div>
+                        <div class="insight-text">
+                            <div class="insight-value">+32% productivity</div>
+                            <div class="insight-desc">Average improvement across all surveyed industries</div>
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon">⏳</div>
+                        <div class="insight-text">
+                            <div class="insight-value">40% time saved</div>
+                            <div class="insight-desc">Average reduction in manual and repetitive tasks</div>
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon">💰</div>
+                        <div class="insight-text">
+                            <div class="insight-value">Significant cost reduction</div>
+                            <div class="insight-desc">Operational overhead lowered through intelligent automation</div>
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon">🤖</div>
+                        <div class="insight-text">
+                            <div class="insight-value">Smarter decisions</div>
+                            <div class="insight-desc">Real-time AI insights accelerate leadership decision-making</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════
+     SCRIPTS
+══════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    /* ─── Chart ─── */
+    const ctx = document.getElementById('productivityChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Finance', 'Healthcare', 'Manufacturing', 'Retail', 'IT'],
+            datasets: [
+                {
+                    label: 'Productivity Increase (%)',
+                    data: [32, 28, 41, 25, 37],
+                    backgroundColor: 'rgba(200,169,110,0.85)',
+                    borderRadius: 6,
+                    borderSkipped: false,
+                },
+                {
+                    label: 'Time Saved (%)',
+                    data: [40, 35, 50, 30, 45],
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                    borderRadius: 6,
+                    borderSkipped: false,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'rgba(255,255,255,0.55)',
+                        font: { family: 'DM Sans', size: 12 },
+                        boxWidth: 12, boxHeight: 12, borderRadius: 3
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#0b1f3a',
+                    titleColor: '#fff',
+                    bodyColor: 'rgba(255,255,255,0.65)',
+                    padding: 12,
+                    cornerRadius: 10,
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: 'rgba(255,255,255,0.45)', font: { family: 'DM Sans', size: 12 } },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                },
+                y: {
+                    ticks: { color: 'rgba(255,255,255,0.45)', font: { family: 'DM Sans', size: 12 }, callback: v => v + '%' },
+                    grid: { color: 'rgba(255,255,255,0.06)' },
+                    border: { dash: [4, 4] }
+                }
+            }
+        }
+    });
+
+    /* ─── Calculator ─── */
+    const PRICE_PER_FTE_YEAR = 4788;
+    const totalSteps = 5;
+    let currentStep = 1;
+
+    let formData = { users:'', salary:'', onlineTime:'', expectedProductive:'', actualProductive:'' };
+
+    const stepConfig = {
+        1: { key:'users',             label:'Count of Users',              help:'Total number of employees using the software.',       placeholder:'e.g., 100' },
+        2: { key:'salary',            label:'Cost / FTE (₹ per year)',     help:'Total average yearly cost (CTC) for one employee.',   placeholder:'e.g., 600000' },
+        3: { key:'onlineTime',        label:'Expected Online Time (Hrs)',   help:'Standard daily hours expected to be online.',         placeholder:'e.g., 9' },
+        4: { key:'expectedProductive',label:'Expected Productive (Hrs)',    help:'Target productive hours expected daily.',             placeholder:'e.g., 7' },
+        5: { key:'actualProductive',  label:'Actual Productive (Hrs)',      help:'Current average productive hours clocked by employees.', placeholder:'e.g., 5.5' }
+    };
+
+    function init(){
+        renderProgress();
+        renderStep();
+        document.getElementById('next-btn').addEventListener('click', () => handleNavigation(1));
+        document.getElementById('back-btn').addEventListener('click', () => handleNavigation(-1));
+        document.getElementById('reset-btn').addEventListener('click', resetCalculator);
+    }
+
+    function renderProgress(){
+        const container = document.getElementById('progress-container');
+        container.innerHTML = '';
+        for(let i = 1; i <= totalSteps; i++){
+            const step = document.createElement('div');
+            step.className = `progress-step ${i <= currentStep ? 'active' : 'inactive'}`;
+            step.textContent = i;
+            container.appendChild(step);
+            if(i < totalSteps){
+                const line = document.createElement('div');
+                line.className = `progress-line ${i < currentStep ? 'active' : 'inactive'}`;
+                container.appendChild(line);
+            }
+        }
+    }
+
+    function renderStep(){
+        const wrapper = document.getElementById('step-content-wrapper');
+        const config = stepConfig[currentStep];
+        wrapper.innerHTML = `
+            <div class="label-group">
+                <label class="label">${config.label}</label>
+                <div class="tooltip">?<span class="tooltip-text">${config.help}</span></div>
+            </div>
+            <input type="number" id="step-input" class="input" placeholder="${config.placeholder}" value="${formData[config.key]}">
+            <p id="error-msg" class="error-message">Please enter a valid number greater than 0.</p>
+        `;
+        const input = document.getElementById('step-input');
+        input.focus();
+        input.addEventListener('input', () => {
+            document.getElementById('error-msg').style.display = 'none';
+            formData[config.key] = input.value;
+        });
+        input.addEventListener('keypress', e => { if(e.key === 'Enter') handleNavigation(1); });
+        document.getElementById('back-btn').style.display = currentStep > 1 ? 'block' : 'none';
+        document.getElementById('next-btn').textContent = currentStep === totalSteps ? 'Calculate ROI' : 'Next';
+        wrapper.classList.remove('fade-out-left','fade-out-right');
+        wrapper.classList.add('fade-in');
+    }
+
+    async function handleNavigation(direction){
+        const input = document.getElementById('step-input');
+        const val = parseFloat(input.value);
+        if(direction === 1 && (!val || val <= 0)){
+            document.getElementById('error-msg').style.display = 'block';
+            return;
+        }
+        const wrapper = document.getElementById('step-content-wrapper');
+        wrapper.classList.remove('fade-in');
+        wrapper.classList.add(direction === 1 ? 'fade-out-left' : 'fade-out-right');
+        await new Promise(r => setTimeout(r, 250));
+        if(direction === 1 && currentStep === totalSteps){ showResults(); }
+        else { currentStep += direction; renderProgress(); renderStep(); }
+    }
+
+    function showResults(){
+        const card = document.getElementById('main-card');
+        card.classList.add('results-view');
+        document.getElementById('calculator-step-view').style.display = 'none';
+        document.getElementById('calculator-results-view').style.display = 'block';
+
+        document.getElementById('inputs-summary').innerHTML = `
+            <div class="summary-item">Users: <span>${formData.users}</span></div>
+            <div class="summary-item">Avg Salary: <span>₹${parseFloat(formData.salary).toLocaleString()}</span></div>
+            <div class="summary-item">Online Time: <span>${formData.onlineTime} hrs</span></div>
+            <div class="summary-item">Expected Productive: <span>${formData.expectedProductive} hrs</span></div>
+            <div class="summary-item">Actual Productive: <span>${formData.actualProductive} hrs</span></div>
+        `;
+
+        const users = parseFloat(formData.users);
+        const salary = parseFloat(formData.salary);
+        const actual = parseFloat(formData.actualProductive);
+        const costOfSolution = users * PRICE_PER_FTE_YEAR;
+
+        const scenarios = [
+            { label:'15 mins Improvement', hours:0.25 },
+            { label:'30 mins Improvement', hours:0.50 },
+            { label:'1 hour Improvement',  hours:1.00, highlighted:true }
+        ];
+
+        const tbody = document.getElementById('results-body');
+        tbody.innerHTML = '';
+        scenarios.forEach(s => {
+            const pct = s.hours / actual;
+            const savings = pct * salary * users;
+            const roi = savings / costOfSolution;
+            const fte = pct * users;
+            const payback = costOfSolution / savings;
+            const row = document.createElement('tr');
+            if(s.highlighted) row.className = 'highlight-row';
+            row.innerHTML = `
+                <td>${s.label}</td>
+                <td>${(pct * 100).toFixed(1)}%</td>
+                <td>₹${Math.round(costOfSolution).toLocaleString()}</td>
+                <td>₹${savings.toLocaleString('en-IN',{minimumFractionDigits:1,maximumFractionDigits:1})}</td>
+                <td>${Math.round(roi)}</td>
+                <td>${Math.round(fte)}</td>
+                <td>${payback.toFixed(2)}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function resetCalculator(){
+        currentStep = 1;
+        formData = { users:'', salary:'', onlineTime:'', expectedProductive:'', actualProductive:'' };
+        document.getElementById('main-card').classList.remove('results-view');
+        document.getElementById('calculator-step-view').style.display = 'block';
+        document.getElementById('calculator-results-view').style.display = 'none';
+        renderProgress();
+        renderStep();
+    }
+
+    init();
+</script>
+</body>
+</html>

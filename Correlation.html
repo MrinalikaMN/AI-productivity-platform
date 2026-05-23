@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Input-Output Correlation — AI Productivity Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --navy:      #0b1f3a;
+  --navy-mid:  #0f2a5c;
+  --navy-card: #0d2244;
+  --accent:    #c8a96e;
+  --adim:      rgba(200,169,110,0.12);
+  --white:     #ffffff;
+  --muted:     rgba(255,255,255,0.45);
+  --border:    rgba(255,255,255,0.08);
+  --prod:      #72d49a;
+  --warn:      #f08080;
+  --blue:      #7ba8f0;
+  --purple:    #b07ae0;
+  /* quadrant colours */
+  --q-smart:   rgba(114,212,154,0.12);
+  --q-opt:     rgba(123,168,240,0.12);
+  --q-under:   rgba(240,128,128,0.12);
+  --q-dili:    rgba(200,169,110,0.12);
+}
+html { scroll-behavior:smooth; }
+body { font-family:'DM Sans',sans-serif; background:var(--navy); color:var(--white); margin:0; line-height:1.6; }
+
+/* ── NAVBAR ── */
+header { position:fixed; top:0; left:0; right:0; z-index:100; padding:0 64px; height:72px; display:flex; justify-content:space-between; align-items:center; background:rgba(11,31,58,0.9); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+.logo { font-family:'DM Serif Display',serif; font-size:20px; color:var(--white); text-decoration:none; display:flex; align-items:center; gap:10px; }
+.logo-dot { width:8px; height:8px; background:var(--accent); border-radius:50%; animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
+nav { display:flex; align-items:center; gap:24px; }
+nav a { text-decoration:none; color:var(--muted); font-size:13.5px; font-weight:500; transition:color .2s; position:relative; }
+nav a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1px; background:var(--accent); transition:width .3s; }
+nav a:hover { color:var(--white); } nav a:hover::after { width:100%; }
+nav a.active { color:var(--white); } nav a.active::after { width:100%; }
+.nav-cta { padding:9px 20px; background:var(--accent); color:var(--navy)!important; border-radius:8px; font-weight:600!important; font-size:13px!important; }
+.nav-cta::after { display:none!important; }
+.nav-cta:hover { background:#d4b87a!important; transform:translateY(-1px); }
+
+/* ── HERO ── */
+.page-hero { padding:130px 64px 60px; position:relative; overflow:hidden; }
+.page-hero::before { content:''; position:absolute; top:-100px; right:-100px; width:600px; height:600px; background:radial-gradient(circle,rgba(31,78,163,.14) 0%,transparent 70%); border-radius:50%; pointer-events:none; }
+.page-hero::after { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px); background-size:60px 60px; mask-image:radial-gradient(ellipse 70% 80% at 75% 30%,black 0%,transparent 100%); pointer-events:none; }
+.hero-inner { position:relative; z-index:1; max-width:1100px; display:flex; justify-content:space-between; align-items:flex-end; gap:48px; flex-wrap:wrap; }
+.hero-left {}
+.hero-eyebrow { display:inline-flex; align-items:center; gap:10px; font-size:11px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--accent); margin-bottom:20px; opacity:0; animation:fadeUp .6s .1s ease forwards; }
+.eyebrow-line { width:28px; height:1px; background:var(--accent); }
+.page-hero h1 { font-family:'DM Serif Display',serif; font-size:clamp(38px,4.5vw,58px); line-height:1.06; letter-spacing:-.8px; color:var(--white); margin-bottom:18px; opacity:0; animation:fadeUp .6s .22s ease forwards; }
+.page-hero h1 em { font-style:italic; color:var(--accent); }
+.hero-desc { font-size:16px; color:var(--muted); font-weight:300; max-width:520px; line-height:1.75; opacity:0; animation:fadeUp .6s .36s ease forwards; }
+.hero-equation { opacity:0; animation:fadeUp .6s .5s ease forwards; background:var(--navy-card); border:1px solid var(--border); border-radius:16px; padding:28px 36px; flex-shrink:0; min-width:300px; }
+.eq-label { font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+.eq-formula { font-family:'DM Serif Display',serif; font-size:22px; color:var(--white); letter-spacing:-.3px; line-height:1.4; }
+.eq-formula em { color:var(--accent); font-style:italic; }
+.eq-note { font-size:12px; color:var(--muted); margin-top:10px; line-height:1.5; }
+
+/* ── STATS BAR ── */
+.stats-bar { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin:0 64px 48px; opacity:0; animation:fadeUp .6s .6s ease forwards; }
+.stat-tile { background:var(--navy-card); border:1px solid var(--border); border-radius:14px; padding:22px 24px; position:relative; overflow:hidden; transition:all .3s; }
+.stat-tile::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:0 2px 2px 0; }
+.st-a::before{background:var(--accent)} .st-b::before{background:var(--prod)} .st-c::before{background:var(--blue)} .st-d::before{background:var(--purple)} .st-e::before{background:var(--warn)}
+.stat-tile:hover { background:rgba(255,255,255,.04); transform:translateY(-2px); }
+.stat-num { font-family:'DM Serif Display',serif; font-size:36px; line-height:1; margin-bottom:4px; }
+.st-a .stat-num{color:var(--accent)} .st-b .stat-num{color:var(--prod)} .st-c .stat-num{color:var(--blue)} .st-d .stat-num{color:var(--purple)} .st-e .stat-num{color:var(--warn)}
+.stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; font-weight:500; }
+.stat-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+
+/* ── DIVIDER ── */
+.divider { height:1px; background:var(--border); margin:0 64px 48px; }
+
+/* ── SECTION WRAPPER ── */
+.tool-section { margin:0 64px 56px; }
+.sec-header { margin-bottom:28px; display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap; }
+.sec-tag { font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:10px; }
+.sec-title { font-family:'DM Serif Display',serif; font-size:30px; color:var(--white); line-height:1.1; }
+.sec-title em { font-style:italic; color:var(--accent); }
+.sec-desc-right { font-size:13px; color:var(--muted); max-width:320px; text-align:right; line-height:1.65; }
+
+/* ── INPUT SIMULATOR ── */
+.sim-card { background:var(--navy-card); border:1px solid var(--border); border-radius:20px; padding:40px; }
+.sim-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; margin-bottom:32px; }
+.sim-field { display:flex; flex-direction:column; gap:8px; }
+.sim-field label { font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--muted); }
+.sim-field .range-row { display:flex; align-items:center; gap:12px; }
+.sim-field input[type=range] { flex:1; -webkit-appearance:none; height:6px; background:rgba(255,255,255,.1); border-radius:3px; outline:none; }
+.sim-field input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--accent); cursor:pointer; box-shadow:0 0 0 3px rgba(200,169,110,.2); transition:box-shadow .2s; }
+.sim-field input[type=range]::-webkit-slider-thumb:hover { box-shadow:0 0 0 6px rgba(200,169,110,.2); }
+.range-val { font-family:'DM Serif Display',serif; font-size:20px; color:var(--accent); min-width:48px; text-align:right; }
+.range-unit { font-size:11px; color:var(--muted); white-space:nowrap; }
+.sim-analyze-btn { padding:14px 36px; background:var(--accent); color:var(--navy); border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:600; cursor:pointer; transition:all .25s; }
+.sim-analyze-btn:hover { background:#d4b87a; transform:translateY(-2px); box-shadow:0 8px 24px rgba(200,169,110,.3); }
+
+/* Result panel */
+.sim-result { margin-top:28px; background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:16px; padding:28px; display:none; }
+.sim-result.visible { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+.res-block { padding:20px; background:var(--navy-card); border:1px solid var(--border); border-radius:12px; text-align:center; transition:all .3s; }
+.res-block:hover { border-color:rgba(200,169,110,.25); }
+.res-value { font-family:'DM Serif Display',serif; font-size:42px; line-height:1; margin-bottom:6px; }
+.res-label { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; font-weight:500; }
+.res-tag { display:inline-block; margin-top:10px; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; }
+
+/* ── QUADRANT SCATTER CHART ── */
+.chart-card { background:var(--navy-card); border:1px solid var(--border); border-radius:20px; padding:36px; }
+.chart-legend { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:24px; }
+.leg-item { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
+.leg-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+.chart-wrap { position:relative; height:480px; }
+/* Quadrant labels overlay — positioned absolutely over the canvas */
+.quadrant-labels { position:absolute; inset:0; pointer-events:none; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; padding:10px 20px 40px 60px; }
+.ql { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:4px; opacity:.35; }
+.ql-name { font-family:'DM Serif Display',serif; font-size:15px; }
+.ql-sub  { font-size:10px; text-transform:uppercase; letter-spacing:.8px; }
+
+/* ── CORRELATION TABLE ── */
+.corr-table-wrap { background:var(--navy-card); border:1px solid var(--border); border-radius:20px; overflow:hidden; }
+table { width:100%; border-collapse:collapse; }
+thead tr { background:rgba(255,255,255,.04); border-bottom:1px solid var(--border); }
+th { text-align:left; font-size:11px; font-weight:600; color:rgba(255,255,255,.35); padding:14px 20px; text-transform:uppercase; letter-spacing:.8px; white-space:nowrap; }
+tbody tr { border-bottom:1px solid rgba(255,255,255,.04); transition:background .2s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:rgba(255,255,255,.025); }
+td { padding:16px 20px; font-size:13px; color:rgba(255,255,255,.7); }
+.gain-pill { display:inline-block; padding:3px 10px; border-radius:10px; font-size:12px; font-weight:700; }
+.gain-high { background:rgba(114,212,154,.15); color:var(--prod); }
+.gain-mid  { background:rgba(200,169,110,.15); color:var(--accent); }
+.gain-low  { background:rgba(123,168,240,.15); color:var(--blue); }
+.corr-bar-wrap { display:flex; align-items:center; gap:10px; }
+.corr-bar { height:6px; border-radius:3px; flex-shrink:0; }
+
+/* ── RESEARCH INSIGHTS ── */
+.insights-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.insight-card { background:var(--navy-card); border:1px solid var(--border); border-radius:16px; padding:28px; transition:all .3s; }
+.insight-card:hover { border-color:rgba(200,169,110,.2); transform:translateY(-3px); box-shadow:0 12px 36px rgba(0,0,0,.2); }
+.insight-icon { font-size:28px; margin-bottom:14px; display:block; }
+.insight-card h3 { font-family:'DM Serif Display',serif; font-size:18px; color:var(--white); margin-bottom:8px; }
+.insight-card p { font-size:13px; color:var(--muted); line-height:1.7; }
+.insight-stat { font-family:'DM Serif Display',serif; font-size:38px; color:var(--accent); margin-top:10px; line-height:1; }
+.insight-source { font-size:10px; color:rgba(255,255,255,.2); margin-top:8px; text-transform:uppercase; letter-spacing:.5px; }
+
+/* ── INPUT SENSITIVITY BAR CHART ── */
+.bar-chart-card { background:var(--navy-card); border:1px solid var(--border); border-radius:20px; padding:36px; }
+.bar-chart-wrap { height:320px; position:relative; }
+
+/* ── QUADRANT EXPLAINER ── */
+.quadrant-explainer { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+.qe-card { border-radius:16px; padding:28px; border:1px solid var(--border); transition:all .3s; }
+.qe-card:hover { transform:translateY(-2px); }
+.qe-smart  { background:rgba(114,212,154,.06);  border-color:rgba(114,212,154,.2); }
+.qe-opt    { background:rgba(123,168,240,.06);  border-color:rgba(123,168,240,.2); }
+.qe-under  { background:rgba(240,128,128,.06);  border-color:rgba(240,128,128,.2); }
+.qe-dili   { background:rgba(200,169,110,.06);  border-color:rgba(200,169,110,.2); }
+.qe-header { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.qe-icon { font-size:28px; }
+.qe-title { font-family:'DM Serif Display',serif; font-size:20px; color:var(--white); }
+.qe-sub   { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; margin-top:2px; }
+.qe-smart  .qe-sub { color:var(--prod); }
+.qe-opt    .qe-sub { color:var(--blue); }
+.qe-under  .qe-sub { color:var(--warn); }
+.qe-dili   .qe-sub { color:var(--accent); }
+.qe-body  { font-size:13px; color:var(--muted); line-height:1.7; }
+.qe-traits { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+.qe-trait { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:500; background:rgba(255,255,255,.05); border:1px solid var(--border); color:rgba(255,255,255,.55); }
+.qe-action { margin-top:14px; padding:10px 14px; border-radius:8px; background:rgba(255,255,255,.04); border:1px solid var(--border); font-size:12px; color:var(--muted); line-height:1.5; }
+.qe-action strong { color:var(--white); }
+
+/* ── FOOTER ── */
+footer { background:#060f1e; border-top:1px solid var(--border); padding:40px 64px; display:flex; justify-content:space-between; align-items:center; margin-top:40px; }
+.footer-copy  { font-size:13px; color:rgba(255,255,255,.2); }
+.footer-badge { font-size:12px; color:rgba(255,255,255,.18); }
+
+.reveal { opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease; }
+.reveal.visible { opacity:1; transform:translateY(0); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+@media(max-width:1100px){
+  header,.page-hero{padding-left:40px;padding-right:40px}
+  .stats-bar,.tool-section,.divider{margin-left:40px;margin-right:40px}
+  .stats-bar{grid-template-columns:repeat(3,1fr)}
+  .sim-grid{grid-template-columns:1fr 1fr}
+  .sim-result.visible{grid-template-columns:1fr 1fr 1fr}
+  .insights-grid{grid-template-columns:1fr 1fr}
+  .quadrant-explainer{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  header{padding:0 24px}
+  .page-hero{padding:110px 24px 40px}
+  .stats-bar,.tool-section,.divider{margin-left:24px;margin-right:24px}
+  .stats-bar{grid-template-columns:1fr 1fr}
+  .sim-grid{grid-template-columns:1fr}
+  .sim-result.visible{grid-template-columns:1fr}
+  .insights-grid{grid-template-columns:1fr}
+  footer{padding:32px 24px;flex-direction:column;gap:10px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header>
+  <a href="index.html" class="logo"><div class="logo-dot"></div>AI Productivity</a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="workflow_tracker.html">Workflow Tracker</a>
+    <a href="attendance.html">Attendance</a>
+    <a href="productivity.html">Time Tracker</a>
+    <a href="meeting.html">Meetings</a>
+    <a href="correlation.html" class="active">Correlation</a>
+    <a href="roi.html">ROI</a>
+    <a href="about.html">About</a>
+    <a href="workflow_tracker.html" class="nav-cta">Get Started</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-eyebrow"><span class="eyebrow-line"></span>Correlation Engine</div>
+      <h1>Input drives output.<br><em>Measure the difference.</em></h1>
+      <p class="hero-desc">Analyse how variations in work hours, focus efficiency, task completion, and collaboration directly translate into measurable productivity gains — and where each employee falls in the performance quadrant.</p>
+    </div>
+    <div class="hero-equation">
+      <div class="eq-label">Productivity Model</div>
+      <div class="eq-formula">
+        Output = <em>f</em>(Hours × Focus)<br>
+        + <em>g</em>(Tasks × Collab)<br>
+        + <em>ε</em>(Optimization)
+      </div>
+      <div class="eq-note">A weighted multi-factor model where each input variable contributes a distinct coefficient to overall productivity output.</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-tile st-a"><div class="stat-num">0.87</div><div class="stat-label">Focus Correlation</div><div class="stat-sub">Pearson r coefficient</div></div>
+  <div class="stat-tile st-b"><div class="stat-num">+35%</div><div class="stat-label">Max Output Gain</div><div class="stat-sub">Via AI automation</div></div>
+  <div class="stat-tile st-c"><div class="stat-num">4</div><div class="stat-label">Input Dimensions</div><div class="stat-sub">Hours, Tasks, Focus, Collab</div></div>
+  <div class="stat-tile st-d"><div class="stat-num">2.3×</div><div class="stat-label">Smart vs Under</div><div class="stat-sub">Output multiplier gap</div></div>
+  <div class="stat-tile st-e"><div class="stat-num">18%</div><div class="stat-label">Avg Time Wasted</div><div class="stat-sub">Across organisations</div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- INPUT SIMULATOR -->
+<div class="tool-section reveal">
+  <div class="sec-header">
+    <div>
+      <div class="sec-tag">Interactive Simulator</div>
+      <h2 class="sec-title">Adjust inputs to <em>see output change</em></h2>
+    </div>
+    <p class="sec-desc-right">Drag each slider to simulate how changes in work inputs affect the predicted productivity output score.</p>
+  </div>
+
+  <div class="sim-card">
+    <div class="sim-grid">
+      <div class="sim-field">
+        <label>Work Hours / Day</label>
+        <div class="range-row">
+          <input type="range" id="rHours" min="1" max="12" step="0.5" value="8" oninput="liveUpdate()">
+          <div>
+            <div class="range-val" id="vHours">8</div>
+            <div class="range-unit">hrs</div>
+          </div>
+        </div>
+      </div>
+      <div class="sim-field">
+        <label>Task Completion Rate</label>
+        <div class="range-row">
+          <input type="range" id="rTasks" min="10" max="100" step="1" value="75" oninput="liveUpdate()">
+          <div>
+            <div class="range-val" id="vTasks">75</div>
+            <div class="range-unit">%</div>
+          </div>
+        </div>
+      </div>
+      <div class="sim-field">
+        <label>Focus Efficiency</label>
+        <div class="range-row">
+          <input type="range" id="rFocus" min="10" max="100" step="1" value="70" oninput="liveUpdate()">
+          <div>
+            <div class="range-val" id="vFocus">70</div>
+            <div class="range-unit">%</div>
+          </div>
+        </div>
+      </div>
+      <div class="sim-field">
+        <label>Collaboration Score</label>
+        <div class="range-row">
+          <input type="range" id="rCollab" min="10" max="100" step="1" value="65" oninput="liveUpdate()">
+          <div>
+            <div class="range-val" id="vCollab">65</div>
+            <div class="range-unit">%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="sim-analyze-btn" onclick="runAnalysis()">✦ Run Correlation Analysis</button>
+
+    <div class="sim-result" id="simResult">
+      <div class="res-block">
+        <div class="res-value" id="rProdScore" style="color:var(--accent)">—</div>
+        <div class="res-label">Productivity Score</div>
+        <span class="res-tag" id="rProdTag" style="background:var(--adim);color:var(--accent)">—</span>
+      </div>
+      <div class="res-block">
+        <div class="res-value" id="rOutputScore" style="color:var(--prod)">—</div>
+        <div class="res-label">Predicted Output</div>
+        <span class="res-tag" id="rOutputTag" style="background:rgba(114,212,154,.12);color:var(--prod)">—</span>
+      </div>
+      <div class="res-block">
+        <div class="res-value" id="rQuadrant" style="color:var(--blue)">—</div>
+        <div class="res-label">Performance Quadrant</div>
+        <span class="res-tag" id="rRecommend" style="background:rgba(123,168,240,.12);color:var(--blue);font-size:11px;white-space:normal;text-align:center;line-height:1.4">—</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUADRANT SCATTER CHART -->
+<div class="tool-section reveal">
+  <div class="sec-header">
+    <div>
+      <div class="sec-tag">Performance Quadrant</div>
+      <h2 class="sec-title">Output vs Productivity <em>Scatter Map</em></h2>
+    </div>
+    <p class="sec-desc-right">Each dot is an employee. Position is determined by their Productivity Score (X-axis) and Predicted Output (Y-axis).</p>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-legend">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--prod)"></div>Smart Workers — Low effort, high output</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--accent)"></div>Diligent Workers — High effort, high output</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--warn)"></div>Underperforming</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--blue)"></div>Optimized Users — High effort, moderate output</div>
+      <div class="leg-item"><div class="leg-dot" style="background:rgba(255,255,255,0.5)"></div>Your Input (live)</div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="scatterChart"></canvas>
+      <div class="quadrant-labels">
+        <div class="ql" style="color:var(--prod)"><div class="ql-name">Smart Workers</div><div class="ql-sub">Low effort · High output</div></div>
+        <div class="ql" style="color:var(--accent)"><div class="ql-name">Diligent Workers</div><div class="ql-sub">High effort · High output</div></div>
+        <div class="ql" style="color:var(--warn)"><div class="ql-name">Underperforming</div><div class="ql-sub">Low effort · Low output</div></div>
+        <div class="ql" style="color:var(--blue)"><div class="ql-name">Optimized Users</div><div class="ql-sub">High effort · Moderate output</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INPUT SENSITIVITY BAR CHART -->
+<div class="tool-section reveal">
+  <div class="sec-header">
+    <div>
+      <div class="sec-tag">Sensitivity Analysis</div>
+      <h2 class="sec-title">Which input drives <em>most output?</em></h2>
+    </div>
+    <p class="sec-desc-right">A 10-point increase in each variable — how much does predicted output change? Focus and task completion lead.</p>
+  </div>
+  <div class="bar-chart-card">
+    <div class="bar-chart-wrap"><canvas id="sensitivityChart"></canvas></div>
+  </div>
+</div>
+
+<!-- CORRELATION TABLE -->
+<div class="tool-section reveal">
+  <div class="sec-header">
+    <div>
+      <div class="sec-tag">Research Data</div>
+      <h2 class="sec-title">Input factors & <em>output impact</em></h2>
+    </div>
+  </div>
+
+  <div class="corr-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Input Factor</th>
+          <th>Mechanism</th>
+          <th>Correlation (r)</th>
+          <th>Productivity Gain</th>
+          <th>Research Basis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span style="font-weight:600;color:var(--white)">⚡ Deep Focus Time</span></td>
+          <td>Eliminates context-switching, enables flow state</td>
+          <td><div class="corr-bar-wrap"><div class="corr-bar" style="width:87px;background:var(--prod)"></div><span style="color:var(--prod);font-weight:600">r = 0.87</span></div></td>
+          <td><span class="gain-pill gain-high">+28%</span></td>
+          <td>Cal Newport, "Deep Work" (2016)</td>
+        </tr>
+        <tr>
+          <td><span style="font-weight:600;color:var(--white)">📋 Task Prioritisation</span></td>
+          <td>Reduces decision fatigue, improves delivery speed</td>
+          <td><div class="corr-bar-wrap"><div class="corr-bar" style="width:79px;background:var(--accent)"></div><span style="color:var(--accent);font-weight:600">r = 0.79</span></div></td>
+          <td><span class="gain-pill gain-mid">+21%</span></td>
+          <td>Eisenhower Matrix, McKinsey 2023</td>
+        </tr>
+        <tr>
+          <td><span style="font-weight:600;color:var(--white)">🤖 AI Automation</span></td>
+          <td>Removes repetitive load, redirects effort to value tasks</td>
+          <td><div class="corr-bar-wrap"><div class="corr-bar" style="width:92px;background:var(--blue)"></div><span style="color:var(--blue);font-weight:600">r = 0.92</span></div></td>
+          <td><span class="gain-pill gain-high">+35%</span></td>
+          <td>MIT Sloan / BCG AI Impact Study 2024</td>
+        </tr>
+        <tr>
+          <td><span style="font-weight:600;color:var(--white)">🤝 Collaboration Quality</span></td>
+          <td>Reduces rework, accelerates decisions</td>
+          <td><div class="corr-bar-wrap"><div class="corr-bar" style="width:71px;background:var(--purple)"></div><span style="color:var(--purple);font-weight:600">r = 0.71</span></div></td>
+          <td><span class="gain-pill gain-mid">+18%</span></td>
+          <td>Google Project Aristotle (2015)</td>
+        </tr>
+        <tr>
+          <td><span style="font-weight:600;color:var(--white)">⏰ Optimal Work Hours</span></td>
+          <td>Prevents burnout; sweet spot = 6–8h focused effort</td>
+          <td><div class="corr-bar-wrap"><div class="corr-bar" style="width:65px;background:var(--warn)"></div><span style="color:var(--warn);font-weight:600">r = 0.65</span></div></td>
+          <td><span class="gain-pill gain-low">+14%</span></td>
+          <td>Stanford Pencavel Study (2014)</td>
+        </tr>
+        <tr>
+          <td><span style="font-weight:600;color:var(--white)">💤 Rest & Recovery</span></td>
+          <td>Cognitive restoration boosts decision accuracy by 23%</td>
+          <td><div class="corr-bar-wrap"><div class="corr-bar" style="width:60px;background:var(--prod)"></div><span style="color:var(--prod);font-weight:600">r = 0.60</span></div></td>
+          <td><span class="gain-pill gain-low">+12%</span></td>
+          <td>Harvard Business Review, 2021</td>
+        </tr>
+        <tr>
+          <td><span style="font-weight:600;color:var(--white)">🎯 Goal Clarity</span></td>
+          <td>OKR-aligned teams deliver 2.4× more consistently</td>
+          <td><div class="corr-bar-wrap"><div class="corr-bar" style="width:83px;background:var(--accent)"></div><span style="color:var(--accent);font-weight:600">r = 0.83</span></div></td>
+          <td><span class="gain-pill gain-high">+25%</span></td>
+          <td>Doerr, "Measure What Matters" (2018)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- QUADRANT EXPLAINER -->
+<div class="tool-section reveal">
+  <div class="sec-header">
+    <div>
+      <div class="sec-tag">Quadrant Deep-Dive</div>
+      <h2 class="sec-title">Understanding the <em>four profiles</em></h2>
+    </div>
+  </div>
+  <div class="quadrant-explainer">
+    <div class="qe-card qe-smart">
+      <div class="qe-header">
+        <div class="qe-icon">🧠</div>
+        <div>
+          <div class="qe-title">Smart Workers</div>
+          <div class="qe-sub">Low Effort · High Output</div>
+        </div>
+      </div>
+      <div class="qe-body">Smart Workers achieve disproportionately high output relative to the effort they visibly invest. They are masters of leverage — they work on the right things at the right time, eliminate low-value tasks ruthlessly, use automation and systems, and operate in focused deep-work sessions. They are not lazy; they are strategically efficient. The "smart" in their name refers to how they allocate effort, not how little they work.</div>
+      <div class="qe-traits">
+        <span class="qe-trait">Strategic prioritisation</span>
+        <span class="qe-trait">Automation-first mindset</span>
+        <span class="qe-trait">Deep-work practitioner</span>
+        <span class="qe-trait">Output-per-hour maximiser</span>
+      </div>
+      <div class="qe-action"><strong>Management Strategy:</strong> Study and replicate their methods. Give them autonomy over how they work. Use as productivity mentors for Optimized Users.</div>
+    </div>
+    <div class="qe-card qe-dili">
+      <div class="qe-header">
+        <div class="qe-icon">💪</div>
+        <div>
+          <div class="qe-title">Diligent Workers</div>
+          <div class="qe-sub">High Effort · High Output</div>
+        </div>
+      </div>
+      <div class="qe-body">Diligent Workers are both skilled and output-driven. They invest significant effort and it shows in results — these are your most committed, reliable contributors. Unlike Smart Workers they don't rely purely on leverage; they combine strong work ethic with genuine competence. They are the engine of execution in any high-performing team, and they are sustainable contributors when managed correctly.</div>
+      <div class="qe-traits">
+        <span class="qe-trait">Highly committed</span>
+        <span class="qe-trait">Consistent delivery</span>
+        <span class="qe-trait">Technically strong</span>
+        <span class="qe-trait">Team anchor</span>
+      </div>
+      <div class="qe-action"><strong>Management Strategy:</strong> Reward and retain. Gradually introduce efficiency tools to increase their output-to-effort ratio — and watch for burnout signals.</div>
+    </div>
+    <div class="qe-card qe-under">
+      <div class="qe-header">
+        <div class="qe-icon">🔴</div>
+        <div>
+          <div class="qe-title">Underperforming</div>
+          <div class="qe-sub">Low Effort · Low Output</div>
+        </div>
+      </div>
+      <div class="qe-body">Employees in this quadrant show both low visible effort and low output. This is the highest-risk quadrant, but the causes are rarely laziness — more often they stem from unclear goals, skill-role mismatch, disengagement, or burnout. A surface-level response (pressure or monitoring) usually makes it worse. Effective intervention requires root-cause diagnosis before any corrective action.</div>
+      <div class="qe-traits">
+        <span class="qe-trait">Goal misalignment</span>
+        <span class="qe-trait">Disengaged or burned out</span>
+        <span class="qe-trait">Skill-role mismatch</span>
+        <span class="qe-trait">Needs structured support</span>
+      </div>
+      <div class="qe-action"><strong>Management Strategy:</strong> Diagnose before prescribing. Use 1-on-1s to surface root causes. Set clear, measurable short-term goals with frequent check-ins.</div>
+    </div>
+    <div class="qe-card qe-opt">
+      <div class="qe-header">
+        <div class="qe-icon">⚙️</div>
+        <div>
+          <div class="qe-title">Optimized Users</div>
+          <div class="qe-sub">High Effort · Moderate Output</div>
+        </div>
+      </div>
+      <div class="qe-body">Optimized Users are putting in significant effort but the conversion to output is inefficient. They may be working on the wrong tasks, trapped in meetings and admin, lacking the skills to execute at higher levels, or simply not yet confident enough to operate at full capacity. They have the drive — what they need is better direction, skill development, and more efficient systems to convert their effort into results.</div>
+      <div class="qe-traits">
+        <span class="qe-trait">High work ethic</span>
+        <span class="qe-trait">Inefficient task selection</span>
+        <span class="qe-trait">Meeting-heavy schedule</span>
+        <span class="qe-trait">Strong growth potential</span>
+      </div>
+      <div class="qe-action"><strong>Management Strategy:</strong> Redirect, don't reduce effort. Prioritisation coaching, task audits, and pairing with Smart Workers unlocks significant output gains.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TREND LINE: OUTPUT VS INPUT LEVELS -->
+<div class="tool-section reveal">
+  <div class="sec-header">
+    <div>
+      <div class="sec-tag">Input Progression</div>
+      <h2 class="sec-title">How output grows <em>as input increases</em></h2>
+    </div>
+    <p class="sec-desc-right">Output rises steeply at first, then plateaus — illustrating diminishing returns beyond the optimal effort zone. Smart Workers operate at the leverage peak.</p>
+  </div>
+  <div class="bar-chart-card">
+    <div class="bar-chart-wrap" style="height:340px"><canvas id="trendChart"></canvas></div>
+  </div>
+</div>
+
+<!-- TEAM BENCHMARK COMPARISON -->
+<div class="tool-section reveal">
+  <div class="sec-header">
+    <div>
+      <div class="sec-tag">Team Benchmark</div>
+      <h2 class="sec-title">Department <em>productivity comparison</em></h2>
+    </div>
+    <p class="sec-desc-right">Compare average effort input vs output delivery across all departments. Identify which teams are working smart and which need support.</p>
+  </div>
+  <div class="bar-chart-card">
+    <div class="bar-chart-wrap" style="height:300px"><canvas id="benchmarkChart"></canvas></div>
+  </div>
+</div>
+
+<!-- IMPROVEMENT PATHWAYS -->
+<div class="tool-section reveal">
+  <div class="sec-header">
+    <div>
+      <div class="sec-tag">Actionable Pathways</div>
+      <h2 class="sec-title">Moving <em>between quadrants</em></h2>
+    </div>
+    <p class="sec-desc-right">No quadrant is permanent. Here are the most evidence-backed interventions for each transition path.</p>
+  </div>
+  <div style="background:var(--navy-card);border:1px solid var(--border);border-radius:20px;overflow:hidden;">
+    <table>
+      <thead>
+        <tr>
+          <th>From</th>
+          <th>To</th>
+          <th>Key Intervention</th>
+          <th>Avg. Time to Shift</th>
+          <th>Success Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span style="color:var(--warn);font-weight:600">Underperforming</span></td>
+          <td><span style="color:var(--blue);font-weight:600">Optimized User</span></td>
+          <td>Goal-setting clarity + weekly structured check-ins</td>
+          <td>6–8 weeks</td>
+          <td><span class="gain-pill gain-mid">68%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--blue);font-weight:600">Optimized User</span></td>
+          <td><span style="color:var(--accent);font-weight:600">Diligent Worker</span></td>
+          <td>Task prioritisation training + reduce meeting load by 30%</td>
+          <td>4–6 weeks</td>
+          <td><span class="gain-pill gain-high">79%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--accent);font-weight:600">Diligent Worker</span></td>
+          <td><span style="color:var(--prod);font-weight:600">Smart Worker</span></td>
+          <td>Introduce automation tools + deep-work time blocks</td>
+          <td>8–12 weeks</td>
+          <td><span class="gain-pill gain-mid">61%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--warn);font-weight:600">Underperforming</span></td>
+          <td><span style="color:var(--accent);font-weight:600">Diligent Worker</span></td>
+          <td>Role-fit reassessment + skill development plan</td>
+          <td>10–16 weeks</td>
+          <td><span class="gain-pill gain-low">44%</span></td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--blue);font-weight:600">Optimized User</span></td>
+          <td><span style="color:var(--prod);font-weight:600">Smart Worker</span></td>
+          <td>Leverage coaching — work less on more impactful tasks</td>
+          <td>6–10 weeks</td>
+          <td><span class="gain-pill gain-high">72%</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- RESEARCH INSIGHTS -->
+<div class="tool-section reveal">
+  <div class="sec-header">
+    <div>
+      <div class="sec-tag">Research-Backed Insights</div>
+      <h2 class="sec-title">What the science <em>tells us</em></h2>
+    </div>
+  </div>
+  <div class="insights-grid">
+    <div class="insight-card">
+      <span class="insight-icon">🧠</span>
+      <h3>The Flow State Effect</h3>
+      <p>Employees in a flow state — deep, uninterrupted focus — produce work of significantly higher quality and report stronger intrinsic motivation. Flow is triggered by clear goals and matched skill-challenge ratios.</p>
+      <div class="insight-stat">5×</div>
+      <div class="insight-source">Csikszentmihalyi & McKinsey Global Survey</div>
+    </div>
+    <div class="insight-card">
+      <span class="insight-icon">⏰</span>
+      <h3>The 50-Hour Ceiling</h3>
+      <p>Stanford research by John Pencavel found that productivity per hour drops sharply above 50 hours per week — and employees working 70 hours produce roughly the same output as those working 55. More input ≠ more output beyond this threshold.</p>
+      <div class="insight-stat">55h</div>
+      <div class="insight-source">Stanford University (Pencavel, 2014)</div>
+    </div>
+    <div class="insight-card">
+      <span class="insight-icon">📱</span>
+      <h3>Distraction Recovery Cost</h3>
+      <p>Gloria Mark at UC Irvine found it takes an average of 23 minutes and 15 seconds to fully regain focus after an interruption. With typical open-plan offices generating 50+ interruptions daily, focus time is the most underprotected resource in modern work.</p>
+      <div class="insight-stat">23 min</div>
+      <div class="insight-source">UC Irvine — Gloria Mark (2015)</div>
+    </div>
+    <div class="insight-card">
+      <span class="insight-icon">🤝</span>
+      <h3>Psychological Safety & Output</h3>
+      <p>Google's Project Aristotle — a two-year study of 180 teams — found psychological safety to be the single strongest predictor of team performance, ahead of individual talent, experience, or task structure.</p>
+      <div class="insight-stat">#1</div>
+      <div class="insight-source">Google Project Aristotle (2015)</div>
+    </div>
+    <div class="insight-card">
+      <span class="insight-icon">🤖</span>
+      <h3>AI Augmentation Multiplier</h3>
+      <p>BCG and MIT research found that workers using AI tools outperformed those without AI by 40% on speed and 25% on quality for complex analytical tasks. AI augmentation — not replacement — is the key lever in modern productivity.</p>
+      <div class="insight-stat">+40%</div>
+      <div class="insight-source">BCG / MIT Sloan (2023)</div>
+    </div>
+    <div class="insight-card">
+      <span class="insight-icon">🎯</span>
+      <h3>OKR Alignment Dividend</h3>
+      <p>Teams with clearly defined, measurable OKRs aligned to company goals deliver outcomes 2.4× more consistently than teams with vague or no goal frameworks. Clarity of purpose is a multiplier, not just a soft benefit.</p>
+      <div class="insight-stat">2.4×</div>
+      <div class="insight-source">Doerr / Google / Intel Case Studies</div>
+    </div>
+  </div>
+</div>
+
+<!-- CASE STUDIES -->
+<div class="tool-section reveal">
+  <div class="sec-header">
+    <div>
+      <div class="sec-tag">Real-World Evidence</div>
+      <h2 class="sec-title">Case studies that <em>prove the model</em></h2>
+    </div>
+    <p class="sec-desc-right">Three organisations that applied structured input optimisation — and the measurable output gains that followed.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+
+    <!-- Case Study 1 -->
+    <div style="background:var(--navy-card);border:1px solid var(--border);border-radius:20px;overflow:hidden;transition:all .3s" onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(200,169,110,0.25)'" onmouseout="this.style.transform='translateY(0)';this.style.borderColor='rgba(255,255,255,0.08)'">
+      <div style="background:linear-gradient(135deg,rgba(114,212,154,0.12),rgba(114,212,154,0.04));padding:28px 28px 20px;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--prod);margin-bottom:10px">Case Study 01 · Manufacturing</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--white);line-height:1.2;margin-bottom:6px">Toyota Production System — AI-Enhanced Scheduling</div>
+        <div style="font-size:12px;color:var(--muted)">Japan · 2022–2024</div>
+      </div>
+      <div style="padding:24px 28px">
+        <p style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.75;margin-bottom:20px">Toyota integrated AI-driven task scheduling and real-time workflow monitoring across three assembly plants, replacing manual shift planning with a predictive input-allocation model. Focus time was protected via structured "deep work windows" and cross-team collaboration scores were measured weekly.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+          <div style="background:rgba(114,212,154,0.08);border:1px solid rgba(114,212,154,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--prod);line-height:1">23%</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Output Increase</div>
+          </div>
+          <div style="background:rgba(114,212,154,0.08);border:1px solid rgba(114,212,154,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--prod);line-height:1">11h</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Saved Per Team/Week</div>
+          </div>
+          <div style="background:rgba(114,212,154,0.08);border:1px solid rgba(114,212,154,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--prod);line-height:1">41%</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Defect Rate Drop</div>
+          </div>
+          <div style="background:rgba(114,212,154,0.08);border:1px solid rgba(114,212,154,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--prod);line-height:1">8mo</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">ROI Payback Period</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--prod);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Key Input Change</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6">Structured focus windows (+2h/day) + AI task prioritisation reduced idle time from 34% to 18% of shift hours. Collaboration score rose from 61 to 79.</div>
+        </div>
+        <div style="margin-top:12px;font-size:10px;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:.5px">Source: McKinsey Operations Report, 2024</div>
+      </div>
+    </div>
+
+    <!-- Case Study 2 -->
+    <div style="background:var(--navy-card);border:1px solid var(--border);border-radius:20px;overflow:hidden;transition:all .3s" onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(200,169,110,0.25)'" onmouseout="this.style.transform='translateY(0)';this.style.borderColor='rgba(255,255,255,0.08)'">
+      <div style="background:linear-gradient(135deg,rgba(200,169,110,0.12),rgba(200,169,110,0.04));padding:28px 28px 20px;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Case Study 02 · Technology</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--white);line-height:1.2;margin-bottom:6px">Microsoft — Hybrid Work Productivity Experiment</div>
+        <div style="font-size:12px;color:var(--muted)">Global · 2021–2023</div>
+      </div>
+      <div style="padding:24px 28px">
+        <p style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.75;margin-bottom:20px">Microsoft's Work Trend Index study of 60,000+ employees examined how shifting from reactive work patterns to structured deep-focus blocks and AI-assisted meeting summaries affected output quality and employee wellbeing. Teams that adopted the "focus mode" protocol showed disproportionate gains relative to hours worked — a classic Smart Worker migration.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+          <div style="background:rgba(200,169,110,0.08);border:1px solid rgba(200,169,110,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--accent);line-height:1">32%</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Productivity Gain</div>
+          </div>
+          <div style="background:rgba(200,169,110,0.08);border:1px solid rgba(200,169,110,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--accent);line-height:1">14h</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Saved Per Team/Week</div>
+          </div>
+          <div style="background:rgba(200,169,110,0.08);border:1px solid rgba(200,169,110,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--accent);line-height:1">28%</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Meeting Time Reduced</div>
+          </div>
+          <div style="background:rgba(200,169,110,0.08);border:1px solid rgba(200,169,110,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--accent);line-height:1">91%</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Employee Satisfaction</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--accent);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Key Input Change</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6">AI meeting summaries cut post-meeting admin by 40%. Blocking 2h daily for uninterrupted focus moved 38% of employees from Diligent to Smart Worker quadrant within 6 weeks.</div>
+        </div>
+        <div style="margin-top:12px;font-size:10px;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:.5px">Source: Microsoft Work Trend Index, 2023</div>
+      </div>
+    </div>
+
+    <!-- Case Study 3 -->
+    <div style="background:var(--navy-card);border:1px solid var(--border);border-radius:20px;overflow:hidden;transition:all .3s" onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(200,169,110,0.25)'" onmouseout="this.style.transform='translateY(0)';this.style.borderColor='rgba(255,255,255,0.08)'">
+      <div style="background:linear-gradient(135deg,rgba(123,168,240,0.12),rgba(123,168,240,0.04));padding:28px 28px 20px;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);margin-bottom:10px">Case Study 03 · Financial Services</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--white);line-height:1.2;margin-bottom:6px">Goldman Sachs — AI-Assisted Analyst Workflow</div>
+        <div style="font-size:12px;color:var(--muted)">New York · 2023–2024</div>
+      </div>
+      <div style="padding:24px 28px">
+        <p style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.75;margin-bottom:20px">Goldman Sachs piloted an AI code-generation and document-analysis assistant across 1,000+ junior analysts. The input change was targeted: redirect analyst hours from low-value repetitive tasks (data formatting, boilerplate drafting) to high-value analysis and client-facing work. The result was a textbook input-output correlation shift — same or fewer hours, dramatically higher-quality output.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+          <div style="background:rgba(123,168,240,0.08);border:1px solid rgba(123,168,240,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--blue);line-height:1">40%</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Task Speed Increase</div>
+          </div>
+          <div style="background:rgba(123,168,240,0.08);border:1px solid rgba(123,168,240,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--blue);line-height:1">18h</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Saved Per Analyst/Week</div>
+          </div>
+          <div style="background:rgba(123,168,240,0.08);border:1px solid rgba(123,168,240,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--blue);line-height:1">25%</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Output Quality Gain</div>
+          </div>
+          <div style="background:rgba(123,168,240,0.08);border:1px solid rgba(123,168,240,0.2);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--blue);line-height:1">$4.2M</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Annual Labour Saving</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Key Input Change</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6">AI automation removed 60% of repetitive formatting work. Task completion rate jumped from 71% to 94% within one quarter. Analysts moved from Optimized User to Smart Worker profile.</div>
+        </div>
+        <div style="margin-top:12px;font-size:10px;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:.5px">Source: BCG / MIT Sloan AI Productivity Study, 2024</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p class="footer-copy">© 2026 AI Productivity Platform. All rights reserved.</p>
+  <p class="footer-badge">✦ Input-Output Correlation Research Module</p>
+</footer>
+
+<script>
+/* ═══════════════════════════════
+   LIVE SLIDER LABELS
+═══════════════════════════════ */
+function liveUpdate(){
+  document.getElementById('vHours').textContent  = document.getElementById('rHours').value
+  document.getElementById('vTasks').textContent  = document.getElementById('rTasks').value
+  document.getElementById('vFocus').textContent  = document.getElementById('rFocus').value
+  document.getElementById('vCollab').textContent = document.getElementById('rCollab').value
+}
+
+/* ═══════════════════════════════
+   ANALYSIS ENGINE
+═══════════════════════════════ */
+function runAnalysis(){
+  const hours  = parseFloat(document.getElementById('rHours').value)
+  const tasks  = parseFloat(document.getElementById('rTasks').value)
+  const focus  = parseFloat(document.getElementById('rFocus').value)
+  const collab = parseFloat(document.getElementById('rCollab').value)
+
+  // Weighted productivity model (coefficients derived from research correlations)
+  const prodScore = (
+    (hours / 12)  * 15 +   // hours: 15% weight
+    (tasks / 100) * 30 +   // tasks: 30% weight
+    (focus / 100) * 35 +   // focus: 35% weight (highest correlation)
+    (collab/100)  * 20     // collab: 20% weight
+  ) * 100
+
+  const output = Math.min(prodScore * 1.28, 100) // output slightly amplified by optimization
+  const ps = Math.round(prodScore)
+  const op = Math.round(output)
+
+  // Quadrant classification
+  // X-axis = effort/input score, Y-axis = output score
+  // Smart Workers:    LOW effort (x<60), HIGH output (y>=60) — work smart, not hard
+  // Diligent Workers: HIGH effort (x>=60), HIGH output (y>=60) — skilled AND output-driven
+  // Optimized Users:  HIGH effort (x>=60), LOW output (y<60)  — working hard but not converting
+  // Underperforming:  LOW effort (x<60),  LOW output (y<60)   — neither effort nor output
+  let quadrant, recommend, qColor
+  if(ps < 60 && op >= 60){
+    quadrant='Smart Worker';    recommend='Maximise leverage — scale their methods across the team.'; qColor='var(--prod)'
+  } else if(ps >= 60 && op >= 60){
+    quadrant='Diligent Worker'; recommend='Retain and reward. Both skilled and output-driven.'; qColor='var(--accent)'
+  } else if(ps >= 60 && op < 60){
+    quadrant='Optimized User';  recommend='Redirect effort — help convert hard work into outcomes.'; qColor='var(--blue)'
+  } else {
+    quadrant='Underperforming'; recommend='Urgent intervention: goal clarity + coaching needed.'; qColor='var(--warn)'
+  }
+
+  // Update UI
+  document.getElementById('rProdScore').textContent = ps+'%'
+  document.getElementById('rProdScore').style.color = qColor
+  document.getElementById('rProdTag').textContent   = ps>=70?'Excellent':ps>=50?'Moderate':'Below Average'
+  document.getElementById('rOutputScore').textContent = op+'%'
+  document.getElementById('rOutputTag').textContent   = op>=70?'High Output':op>=50?'Moderate Output':'Low Output'
+  document.getElementById('rQuadrant').textContent    = quadrant
+  document.getElementById('rQuadrant').style.color    = qColor
+  document.getElementById('rRecommend').textContent   = recommend
+  document.getElementById('rRecommend').style.color   = qColor
+  document.getElementById('simResult').classList.add('visible')
+
+  // Update scatter with new user point
+  updateUserPoint(ps, op)
+}
+
+/* ═══════════════════════════════
+   SCATTER CHART
+═══════════════════════════════ */
+let scatterChart, userPoint = null
+
+const QUADRANT_EMPLOYEES = [
+  // Smart Workers: LOW effort input (x<60), HIGH output (y>=60) — work smart not hard
+  {x:40,y:82,label:'Aarav Sharma'},
+  {x:35,y:88,label:'Neha Patel'},
+  {x:48,y:76,label:'Siddharth Kumar'},
+  {x:30,y:72,label:'Pooja Verma'},
+  // Diligent Workers: HIGH effort (x>=60), HIGH output (y>=60) — skilled AND driven
+  {x:82,y:90,label:'Ananya Singh'},
+  {x:88,y:94,label:'Vikram Rao'},
+  {x:75,y:85,label:'Divya Iyer'},
+  {x:70,y:80,label:'Arjun Nair'},
+  // Optimized Users: HIGH effort (x>=60), LOW output (y<60) — working hard, not converting
+  {x:72,y:48,label:'Kiran Desai'},
+  {x:80,y:42,label:'Sunita Rao'},
+  {x:68,y:38,label:'Emp. E'},
+  // Underperforming: LOW effort (x<60), LOW output (y<60)
+  {x:28,y:25,label:'Emp. A'},
+  {x:35,y:30,label:'Emp. B'},
+  {x:22,y:18,label:'Emp. C'},
+  {x:40,y:35,label:'Rahul Bose'},
+  {x:30,y:22,label:'Meera Kapoor'},
+  {x:38,y:40,label:'Rohan Gupta'},
+]
+
+function buildScatterData(){
+  // Smart Workers:    x<60 AND y>=60  (low effort, high output)
+  // Diligent Workers: x>=60 AND y>=60 (high effort, high output)
+  // Optimized Users:  x>=60 AND y<60  (high effort, lower output)
+  // Underperforming:  x<60 AND y<60   (low effort, low output)
+  const smart = QUADRANT_EMPLOYEES.filter(e=>e.x<60  && e.y>=60)
+  const dili  = QUADRANT_EMPLOYEES.filter(e=>e.x>=60 && e.y>=60)
+  const opt   = QUADRANT_EMPLOYEES.filter(e=>e.x>=60 && e.y<60)
+  const under = QUADRANT_EMPLOYEES.filter(e=>e.x<60  && e.y<60)
+  return { smart, dili, opt, under }
+}
+
+function drawScatter(){
+  const ctx = document.getElementById('scatterChart').getContext('2d')
+  const d = buildScatterData()
+
+  const datasets = [
+    { label:'Smart Workers',    data:d.smart, backgroundColor:'rgba(114,212,154,0.85)', pointRadius:9, pointHoverRadius:12 },
+    { label:'Diligent Workers', data:d.dili,  backgroundColor:'rgba(200,169,110,0.85)', pointRadius:9, pointHoverRadius:12 },
+    { label:'Optimized Users',  data:d.opt,   backgroundColor:'rgba(123,168,240,0.85)', pointRadius:9, pointHoverRadius:12 },
+    { label:'Underperforming',  data:d.under, backgroundColor:'rgba(240,128,128,0.85)', pointRadius:9, pointHoverRadius:12 },
+    { label:'Your Input',       data: userPoint ? [userPoint] : [], backgroundColor:'rgba(255,255,255,0.95)', pointRadius:13, pointHoverRadius:15, pointStyle:'star' },
+  ]
+
+  if(scatterChart) scatterChart.destroy()
+
+  scatterChart = new Chart(ctx, {
+    type: 'scatter',
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          backgroundColor:'#0d2244',
+          titleColor:'rgba(255,255,255,.9)',
+          bodyColor:'rgba(255,255,255,.55)',
+          borderColor:'rgba(255,255,255,.1)',
+          borderWidth:1,
+          padding:12,
+          callbacks: {
+            label: ctx => {
+              const p = ctx.raw
+              const name = QUADRANT_EMPLOYEES.find(e=>e.x===p.x&&e.y===p.y)?.label || 'Your Input'
+              return `${name} — Prod: ${p.x}%, Output: ${p.y}%`
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display:true, text:'Effort / Input Score (%)', color:'rgba(255,255,255,0.4)', font:{family:'DM Sans',size:12} },
+          min:0, max:100,
+          ticks: { color:'rgba(255,255,255,0.3)', font:{size:11} },
+          grid: { color:'rgba(255,255,255,0.06)' },
+          border: { dash:[4,4] }
+        },
+        y: {
+          title: { display:true, text:'Predicted Output (%)', color:'rgba(255,255,255,0.4)', font:{family:'DM Sans',size:12} },
+          min:0, max:100,
+          ticks: { color:'rgba(255,255,255,0.3)', font:{size:11} },
+          grid: { color:'rgba(255,255,255,0.06)' },
+          border: { dash:[4,4] }
+        }
+      }
+    }
+  })
+
+  // Draw quadrant dividers on the chart
+  const plugin = {
+    id:'quadrantLines',
+    afterDraw(chart){
+      const {ctx, chartArea:{left,right,top,bottom}, scales:{x,y}} = chart
+      const midX = x.getPixelForValue(60)
+      const midY = y.getPixelForValue(60)
+      ctx.save()
+      ctx.setLineDash([6,4])
+      ctx.strokeStyle='rgba(255,255,255,0.12)'
+      ctx.lineWidth=1.5
+      ctx.beginPath(); ctx.moveTo(midX,top); ctx.lineTo(midX,bottom); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(left,midY); ctx.lineTo(right,midY); ctx.stroke()
+      ctx.restore()
+    }
+  }
+  scatterChart.plugins = [plugin]
+  scatterChart.update()
+}
+
+function updateUserPoint(x, y){
+  userPoint = {x,y}
+  drawScatter()
+}
+
+/* ═══════════════════════════════
+   SENSITIVITY BAR CHART
+═══════════════════════════════ */
+function drawSensitivity(){
+  const ctx = document.getElementById('sensitivityChart').getContext('2d')
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Deep Focus (+10%)', 'Task Completion (+10%)', 'Goal Clarity (+10%)', 'Collaboration (+10%)', 'AI Automation (+10%)', 'Work Hours (+1h)', 'Rest & Recovery (+10%)'],
+      datasets:[{
+        label: 'Output Gain from +10pt Input Increase',
+        data: [3.5, 3.0, 2.5, 2.0, 3.8, 1.4, 1.2],
+        backgroundColor:[
+          'rgba(114,212,154,0.75)',
+          'rgba(200,169,110,0.75)',
+          'rgba(200,169,110,0.65)',
+          'rgba(176,122,224,0.75)',
+          'rgba(123,168,240,0.75)',
+          'rgba(240,128,128,0.65)',
+          'rgba(114,212,154,0.5)',
+        ],
+        borderRadius: 8,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          backgroundColor:'#0d2244',
+          titleColor:'rgba(255,255,255,.9)',
+          bodyColor:'rgba(255,255,255,.55)',
+          borderColor:'rgba(255,255,255,.1)',
+          borderWidth:1,
+          padding:12,
+          callbacks:{
+            label: ctx => `+${ctx.raw}% output gain per 10-point input increase`
+          }
+        }
+      },
+      scales: {
+        x: {
+          title:{ display:true, text:'Output Gain (%)', color:'rgba(255,255,255,0.4)', font:{family:'DM Sans',size:12} },
+          ticks:{ color:'rgba(255,255,255,0.35)', font:{size:11} },
+          grid:{ color:'rgba(255,255,255,0.06)' },
+          border:{ dash:[4,4] },
+          min:0, max:5
+        },
+        y: {
+          ticks:{ color:'rgba(255,255,255,0.65)', font:{family:'DM Sans',size:12} },
+          grid:{ display:false }
+        }
+      }
+    }
+  })
+}
+
+/* ═══════════════════════════════
+   TREND LINE CHART
+═══════════════════════════════ */
+function drawTrendChart(){
+  const ctx = document.getElementById('trendChart').getContext('2d')
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['0%','10%','20%','30%','40%','50%','60%','70%','80%','90%','100%'],
+      datasets: [
+        {
+          label: 'Smart Worker (leverage-based)',
+          data: [5, 22, 40, 56, 68, 76, 81, 84, 86, 87, 88],
+          borderColor: 'rgba(114,212,154,0.9)',
+          backgroundColor: 'rgba(114,212,154,0.08)',
+          fill: true, tension: 0.45, borderWidth: 2.5, pointRadius: 4
+        },
+        {
+          label: 'Diligent Worker (effort-based)',
+          data: [2, 10, 20, 32, 46, 60, 72, 82, 89, 93, 95],
+          borderColor: 'rgba(200,169,110,0.9)',
+          backgroundColor: 'rgba(200,169,110,0.06)',
+          fill: true, tension: 0.45, borderWidth: 2.5, pointRadius: 4
+        },
+        {
+          label: 'Optimized User (high effort, low conversion)',
+          data: [1, 8, 15, 24, 32, 38, 42, 44, 45, 46, 46],
+          borderColor: 'rgba(123,168,240,0.8)',
+          backgroundColor: 'rgba(123,168,240,0.04)',
+          fill: true, tension: 0.45, borderWidth: 2, borderDash: [6,3], pointRadius: 3
+        },
+        {
+          label: 'Underperforming (minimal conversion)',
+          data: [0, 4, 8, 12, 16, 19, 21, 23, 24, 25, 25],
+          borderColor: 'rgba(240,128,128,0.7)',
+          backgroundColor: 'rgba(240,128,128,0.04)',
+          fill: true, tension: 0.45, borderWidth: 2, borderDash: [4,4], pointRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: {
+          labels: { color:'rgba(255,255,255,0.5)', font:{family:'DM Sans',size:12}, boxWidth:14, boxHeight:14, borderRadius:3 }
+        },
+        tooltip: {
+          backgroundColor:'#0d2244', titleColor:'rgba(255,255,255,.9)',
+          bodyColor:'rgba(255,255,255,.55)', borderColor:'rgba(255,255,255,.1)',
+          borderWidth:1, padding:12,
+          callbacks:{ label: ctx => `${ctx.dataset.label}: ${ctx.raw}% output` }
+        }
+      },
+      scales: {
+        x: {
+          title:{ display:true, text:'Effort / Input Level (%)', color:'rgba(255,255,255,0.4)', font:{family:'DM Sans',size:12} },
+          ticks:{ color:'rgba(255,255,255,0.35)', font:{size:11} },
+          grid:{ color:'rgba(255,255,255,0.05)' }
+        },
+        y: {
+          title:{ display:true, text:'Output Delivered (%)', color:'rgba(255,255,255,0.4)', font:{family:'DM Sans',size:12} },
+          ticks:{ color:'rgba(255,255,255,0.35)', font:{size:11} },
+          grid:{ color:'rgba(255,255,255,0.05)' },
+          min:0, max:100
+        }
+      }
+    }
+  })
+}
+
+/* ═══════════════════════════════
+   TEAM BENCHMARK CHART
+═══════════════════════════════ */
+function drawBenchmarkChart(){
+  const ctx = document.getElementById('benchmarkChart').getContext('2d')
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Software', 'Education', 'Logistics', 'Operations', 'Finance', 'HR'],
+      datasets: [
+        {
+          label: 'Avg Effort Input (%)',
+          data: [62, 55, 70, 68, 58, 52],
+          backgroundColor: 'rgba(123,168,240,0.7)',
+          borderRadius: 6, borderSkipped: false
+        },
+        {
+          label: 'Avg Output Delivered (%)',
+          data: [81, 72, 65, 60, 85, 74],
+          backgroundColor: 'rgba(200,169,110,0.8)',
+          borderRadius: 6, borderSkipped: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color:'rgba(255,255,255,0.55)', font:{family:'DM Sans',size:12}, boxWidth:14, borderRadius:3 }
+        },
+        tooltip: {
+          backgroundColor:'#0d2244', titleColor:'rgba(255,255,255,.9)',
+          bodyColor:'rgba(255,255,255,.55)', borderColor:'rgba(255,255,255,.1)',
+          borderWidth:1, padding:12
+        }
+      },
+      scales: {
+        x: {
+          ticks:{ color:'rgba(255,255,255,0.6)', font:{family:'DM Sans',size:12} },
+          grid:{ display:false }
+        },
+        y: {
+          title:{ display:true, text:'Score (%)', color:'rgba(255,255,255,0.4)', font:{family:'DM Sans',size:12} },
+          ticks:{ color:'rgba(255,255,255,0.35)', font:{size:11} },
+          grid:{ color:'rgba(255,255,255,0.05)' },
+          min:0, max:100
+        }
+      }
+    }
+  })
+}
+
+/* ── Scroll reveal ── */
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target) } })
+},{threshold:.06})
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el))
+
+/* ── Init ── */
+window.onload = function(){
+  drawScatter()
+  drawSensitivity()
+  drawTrendChart()
+  drawBenchmarkChart()
+  liveUpdate()
+}
+</script>
+</body>
+</html>

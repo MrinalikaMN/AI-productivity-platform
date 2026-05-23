@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workflow Tracker — AI Productivity Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+
+/* ── RESET & VARIABLES ── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --navy:       #0b1f3a;
+  --navy-mid:   #0f2a5c;
+  --navy-light: #1f4ea3;
+  --accent:     #c8a96e;
+  --accent-dim: rgba(200,169,110,0.12);
+  --white:      #ffffff;
+  --off-white:  #f4f6f9;
+  --muted:      rgba(255,255,255,0.45);
+  --border:     rgba(255,255,255,0.08);
+  --card:       rgba(255,255,255,0.04);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--navy);
+  color: var(--white);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── NAVBAR ── */
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 0 64px;
+  height: 72px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(11,31,58,0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  color: var(--white);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-dot {
+  width: 8px; height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:0.6; transform:scale(1.3); }
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+nav a {
+  text-decoration: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+  position: relative;
+}
+
+nav a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0;
+  width: 0; height: 1px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+nav a:hover { color: var(--white); }
+nav a:hover::after { width: 100%; }
+nav a.active { color: var(--white); }
+nav a.active::after { width: 100%; }
+
+.nav-cta {
+  padding: 9px 22px;
+  background: var(--accent);
+  color: var(--navy) !important;
+  border-radius: 8px;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  transition: all 0.2s !important;
+}
+.nav-cta::after { display:none !important; }
+.nav-cta:hover { background: #d4b87a !important; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,169,110,0.35); }
+
+/* ── PAGE HERO ── */
+.page-hero {
+  padding: 130px 64px 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-hero::before {
+  content: '';
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 550px; height: 550px;
+  background: radial-gradient(circle, rgba(31,78,163,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.page-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 70% 80% at 70% 30%, black 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeUp 0.6s 0.1s ease forwards;
+}
+
+.hero-eyebrow-line { width: 28px; height: 1px; background: var(--accent); }
+
+.page-hero h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(36px, 4.5vw, 54px);
+  line-height: 1.08;
+  letter-spacing: -0.8px;
+  color: var(--white);
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeUp 0.6s 0.22s ease forwards;
+}
+
+.page-hero h1 em { font-style: italic; color: var(--accent); }
+
+.page-hero p {
+  font-size: 17px;
+  color: var(--muted);
+  font-weight: 300;
+  max-width: 560px;
+  line-height: 1.75;
+  opacity: 0;
+  animation: fadeUp 0.6s 0.36s ease forwards;
+}
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 0 64px 0;
+  padding: 0 0 56px;
+  opacity: 0;
+  animation: fadeUp 0.6s 0.5s ease forwards;
+}
+
+.stat-tile {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px 28px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.stat-tile::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.stat-tile:hover::before { opacity: 1; }
+.stat-tile:hover { background: var(--accent-dim); border-color: rgba(200,169,110,0.2); }
+
+.stat-tile-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 36px;
+  color: var(--white);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-tile-num span { color: var(--accent); font-size: 22px; }
+
+.stat-tile-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 500;
+}
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 0 64px; }
+
+/* ── FORM ── */
+.form-section {
+  margin: 48px 64px;
+  background: #0d2244;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-section.editing {
+  border-color: rgba(200,169,110,0.45);
+  box-shadow: 0 20px 60px rgba(200,169,110,0.1);
+}
+
+.form-section-header {
+  margin-bottom: 36px;
+}
+
+.form-section-header h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+
+.form-section-header p {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 32px;
+  row-gap: 24px;
+  align-items: start;
+}
+
+.field-group {}
+
+label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  display: block;
+  margin-bottom: 8px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  background: rgba(255,255,255,0.06);
+  color: var(--white);
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input::placeholder { color: rgba(255,255,255,0.25); }
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200,169,110,0.15);
+  background: rgba(255,255,255,0.09);
+}
+
+select option { background: #0d2244; color: var(--white); }
+
+textarea { resize: none; }
+
+.submit-btn {
+  margin-top: 32px;
+  padding: 14px 32px;
+  background: var(--accent);
+  color: var(--navy);
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: all 0.25s ease;
+}
+
+.submit-btn:hover {
+  background: #d4b87a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(200,169,110,0.3);
+}
+
+.submit-btn.updating {
+  background: #f0ad4e;
+  color: var(--navy);
+}
+
+.submit-btn.updating:hover { background: #d48c1a; }
+
+/* ── TABLE SECTION ── */
+.table-section {
+  margin: 0 64px 60px;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.table-header h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px;
+  color: var(--white);
+}
+
+.table-header p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.table-count {
+  font-size: 13px;
+  color: var(--muted);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 16px;
+}
+
+.table-wrapper {
+  background: #0d2244;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px;
+}
+
+thead tr {
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.4);
+  padding: 16px 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+}
+
+tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.2s;
+}
+
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+td {
+  padding: 18px 20px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+  white-space: nowrap;
+}
+
+/* Industry badge */
+.industry-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.badge-software  { background: rgba(31,78,163,0.25); color: #7ba8f0; border: 1px solid rgba(31,78,163,0.3); }
+.badge-education { background: rgba(46,158,86,0.2);  color: #72d49a; border: 1px solid rgba(46,158,86,0.25); }
+.badge-logistics { background: rgba(200,169,110,0.2); color: #e0c47a; border: 1px solid rgba(200,169,110,0.25); }
+.badge-operations { background: rgba(180,80,80,0.2); color: #f08080; border: 1px solid rgba(180,80,80,0.25); }
+
+/* Task name */
+.task-name {
+  font-weight: 500;
+  color: var(--white);
+  font-size: 13px;
+}
+
+/* Efficiency */
+.eff-high   { color: #72d49a; font-weight: 600; }
+.eff-mid    { color: #e0c47a; font-weight: 600; }
+.eff-low    { color: #f08080; font-weight: 600; }
+
+/* Progress bar */
+.progress-bar {
+  width: 100px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  height: 6px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.8s ease;
+}
+
+/* Priority */
+.priority-high   { color: #f08080; font-weight: 600; font-size: 12px; }
+.priority-medium { color: #e0c47a; font-weight: 600; font-size: 12px; }
+.priority-low    { color: #7ba8f0; font-weight: 600; font-size: 12px; }
+
+/* Status */
+.status-pending   { color: #e0c47a; font-weight: 600; font-size: 12px; }
+.status-progress  { color: #7ba8f0; font-weight: 600; font-size: 12px; }
+.status-completed { color: #72d49a; font-weight: 600; font-size: 12px; }
+
+/* Action buttons */
+.action-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+
+.edit-btn {
+  background: rgba(200,169,110,0.15);
+  color: var(--accent);
+  border: 1px solid rgba(200,169,110,0.25);
+  margin-right: 6px;
+}
+
+.edit-btn:hover {
+  background: rgba(200,169,110,0.25);
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: rgba(217,83,79,0.15);
+  color: #f08080;
+  border: 1px solid rgba(217,83,79,0.25);
+}
+
+.delete-btn:hover {
+  background: rgba(217,83,79,0.25);
+  transform: translateY(-1px);
+}
+
+/* ── FOOTER ── */
+footer {
+  background: #060f1e;
+  border-top: 1px solid var(--border);
+  padding: 40px 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-copy { font-size: 13px; color: rgba(255,255,255,0.2); }
+.footer-badge { font-size: 12px; color: rgba(255,255,255,0.18); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  header { padding: 0 24px; }
+  .page-hero { padding: 110px 24px 40px; }
+  .stats-row { grid-template-columns: 1fr 1fr; margin: 0 24px; padding-bottom: 40px; }
+  .divider { margin: 0 24px; }
+  .form-section, .table-section { margin: 32px 24px; }
+  .form-grid { grid-template-columns: 1fr; }
+  footer { padding: 32px 24px; flex-direction: column; gap: 10px; text-align: center; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<header>
+  <a href="index.html" class="logo">
+    <div class="logo-dot"></div>
+    AI Productivity
+  </a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="workflow_tracker.html" class="active">Workflow Tracker</a>
+    <a href="roi.html">ROI Calculator</a>
+    <a href="about.html">About</a>
+    <a href="workflow_tracker.html" class="nav-cta">Get Started</a>
+  </nav>
+</header>
+
+<!-- ── PAGE HERO ── -->
+<section class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-line"></span>
+      Workflow Intelligence
+    </div>
+    <h1>Track. Measure.<br><em>Optimise.</em></h1>
+    <p>
+      Capture workflow activities, monitor execution time, and evaluate
+      productivity improvements across industries using structured task data.
+    </p>
+  </div>
+</section>
+
+<!-- ── STATS ROW ── -->
+<div class="stats-row" id="statsRow">
+  <div class="stat-tile">
+    <div class="stat-tile-num" id="statTotal">0</div>
+    <div class="stat-tile-label">Total Tasks</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-tile-num" id="statCompleted">0</div>
+    <div class="stat-tile-label">Completed</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-tile-num" id="statInProgress">0</div>
+    <div class="stat-tile-label">In Progress</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-tile-num" id="statAvgEff">—</div>
+    <div class="stat-tile-label">Avg Efficiency</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── FORM ── -->
+<section class="form-section" id="formSection">
+  <div class="form-section-header">
+    <h2>Add Workflow Task</h2>
+    <p>Fill in the details below to log a new task to the tracker.</p>
+  </div>
+
+  <div class="form-grid">
+    <div class="field-group">
+      <label>Industry</label>
+      <select id="industry">
+        <option>Software</option>
+        <option>Education</option>
+        <option>Logistics</option>
+        <option>Operations</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>Task Name</label>
+      <input type="text" id="taskName" placeholder="e.g. API Integration">
+    </div>
+    <div class="field-group">
+      <label>Owner</label>
+      <input type="text" id="owner" placeholder="e.g. Priya Mehta">
+    </div>
+    <div class="field-group">
+      <label>Estimated Time (minutes)</label>
+      <input type="number" id="estimatedTime" placeholder="e.g. 180">
+    </div>
+    <div class="field-group">
+      <label>Actual Time (minutes)</label>
+      <input type="number" id="actualTime" placeholder="e.g. 210">
+    </div>
+    <div class="field-group">
+      <label>Priority</label>
+      <select id="priority">
+        <option>High</option>
+        <option>Medium</option>
+        <option>Low</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>Status</label>
+      <select id="status">
+        <option>Pending</option>
+        <option>In Progress</option>
+        <option>Completed</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>Deadline</label>
+      <input type="date" id="deadline">
+    </div>
+    <div class="field-group" style="grid-column:1/-1;">
+      <label>Description</label>
+      <textarea id="description" rows="3" placeholder="Optional task description…"></textarea>
+    </div>
+  </div>
+
+  <button type="button" class="submit-btn" id="submitBtn" onclick="submitForm()">Add Workflow Task</button>
+</section>
+
+<!-- ── TABLE ── -->
+<section class="table-section">
+  <div class="table-header">
+    <div>
+      <h2>Active Tasks</h2>
+      <p>All tracked workflow tasks across industries</p>
+    </div>
+    <span class="table-count" id="tableCount">0 tasks</span>
+  </div>
+
+  <div class="table-wrapper">
+    <table id="taskTable">
+      <thead>
+        <tr>
+          <th>Industry</th>
+          <th>Task</th>
+          <th>Owner</th>
+          <th>Est.</th>
+          <th>Actual</th>
+          <th>Efficiency</th>
+          <th>Progress</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Deadline</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="taskBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <p class="footer-copy">© 2026 AI Productivity Platform. All rights reserved.</p>
+  <p class="footer-badge">✦ Workflow Efficiency Research Project</p>
+</footer>
+
+<script>
+
+let editingRow = null
+
+/* ── Industry badge class ── */
+function industryBadge(ind){
+  const map = { 'Software':'badge-software', 'Education':'badge-education', 'Logistics':'badge-logistics', 'Operations':'badge-operations' }
+  const cls = map[ind] || 'badge-software'
+  return `<span class="industry-badge ${cls}">${ind}</span>`
+}
+
+/* ── Efficiency colour ── */
+function effClass(eff){
+  if(eff >= 100) return 'eff-high'
+  if(eff >= 70)  return 'eff-mid'
+  return 'eff-low'
+}
+
+/* ── Progress bar colour ── */
+function progressColor(pct){
+  if(pct <= 60)  return '#72d49a'
+  if(pct <= 90)  return '#c8a96e'
+  return '#f08080'
+}
+
+/* ── Status HTML ── */
+function statusHTML(s){
+  if(s === 'Pending')     return `<span class="status-pending">⬤ Pending</span>`
+  if(s === 'In Progress') return `<span class="status-progress">⬤ In Progress</span>`
+  return `<span class="status-completed">⬤ Completed</span>`
+}
+
+/* ── Priority HTML ── */
+function priorityHTML(p){
+  if(p === 'High')   return `<span class="priority-high">↑ High</span>`
+  if(p === 'Medium') return `<span class="priority-medium">→ Medium</span>`
+  return `<span class="priority-low">↓ Low</span>`
+}
+
+/* ── Populate a tbody row ── */
+function populateRow(row, industry, name, owner, estimated, actual, priority, status, deadline){
+  while(row.cells.length > 0) row.deleteCell(0)
+
+  const est = parseFloat(estimated)
+  const act = parseFloat(actual)
+  const efficiency = (est && act) ? Math.round((est / act) * 100) : 0
+  const progress   = (est && act) ? Math.min(100, Math.round((act / est) * 100)) : 0
+  const barColor   = progressColor(progress)
+
+  row.insertCell(0).innerHTML = industryBadge(industry)
+
+  const taskCell = row.insertCell(1)
+  taskCell.innerHTML = `<span class="task-name">${name}</span>`
+
+  row.insertCell(2).innerHTML = owner
+  row.insertCell(3).innerHTML = `<span style="color:rgba(255,255,255,0.5)">${estimated} min</span>`
+  row.insertCell(4).innerHTML = `<span style="color:rgba(255,255,255,0.5)">${actual} min</span>`
+
+  const effCell = row.insertCell(5)
+  effCell.innerHTML = `<span class="${effClass(efficiency)}">${efficiency}%</span>`
+
+  const progCell = row.insertCell(6)
+  progCell.innerHTML = `<div class="progress-bar"><div class="progress-fill" style="width:${progress}%; background:${barColor}"></div></div>`
+
+  row.insertCell(7).innerHTML = priorityHTML(priority)
+  row.insertCell(8).innerHTML = statusHTML(status)
+  row.insertCell(9).innerHTML = `<span style="color:rgba(255,255,255,0.4); font-size:12px;">${deadline}</span>`
+
+  const ac = row.insertCell(10)
+  ac.innerHTML =
+    `<button type="button" class="action-btn edit-btn" onclick="editTask(this)">Edit</button>` +
+    `<button type="button" class="action-btn delete-btn" onclick="deleteTask(this)">Delete</button>`
+
+  // store raw values as data attributes for editing
+  row.dataset.industry  = industry
+  row.dataset.name      = name
+  row.dataset.owner     = owner
+  row.dataset.estimated = estimated
+  row.dataset.actual    = actual
+  row.dataset.priority  = priority
+  row.dataset.status    = status
+  row.dataset.deadline  = deadline
+}
+
+function insertRow(industry, name, owner, estimated, actual, priority, status, deadline){
+  const body = document.getElementById('taskBody')
+  const row  = body.insertRow()
+  populateRow(row, industry, name, owner, estimated, actual, priority, status, deadline)
+  updateStats()
+}
+
+/* ── Stats updater ── */
+function updateStats(){
+  const rows = document.getElementById('taskBody').rows
+  let total = rows.length, completed = 0, inProgress = 0, effSum = 0, effCount = 0
+
+  for(let r of rows){
+    const s   = r.dataset.status
+    const est = parseFloat(r.dataset.estimated)
+    const act = parseFloat(r.dataset.actual)
+    if(s === 'Completed')   completed++
+    if(s === 'In Progress') inProgress++
+    if(est && act){ effSum += Math.round((est/act)*100); effCount++ }
+  }
+
+  document.getElementById('statTotal').textContent      = total
+  document.getElementById('statCompleted').textContent  = completed
+  document.getElementById('statInProgress').textContent = inProgress
+  document.getElementById('statAvgEff').textContent     = effCount ? Math.round(effSum/effCount)+'%' : '—'
+  document.getElementById('tableCount').textContent     = total + (total === 1 ? ' task' : ' tasks')
+}
+
+function getFormValues(){
+  return {
+    industry  : document.getElementById('industry').value,
+    name      : document.getElementById('taskName').value,
+    owner     : document.getElementById('owner').value,
+    estimated : document.getElementById('estimatedTime').value,
+    actual    : document.getElementById('actualTime').value,
+    priority  : document.getElementById('priority').value,
+    status    : document.getElementById('status').value,
+    deadline  : document.getElementById('deadline').value
+  }
+}
+
+function clearForm(){
+  document.getElementById('taskName').value     = ''
+  document.getElementById('owner').value        = ''
+  document.getElementById('estimatedTime').value = ''
+  document.getElementById('actualTime').value   = ''
+  document.getElementById('description').value  = ''
+  document.getElementById('deadline').value     = ''
+  document.getElementById('industry').value     = 'Software'
+  document.getElementById('priority').value     = 'High'
+  document.getElementById('status').value       = 'Pending'
+
+  const btn = document.getElementById('submitBtn')
+  btn.textContent = 'Add Workflow Task'
+  btn.classList.remove('updating')
+
+  const form = document.getElementById('formSection')
+  form.classList.remove('editing')
+  form.querySelector('.form-section-header h2').textContent = 'Add Workflow Task'
+  form.querySelector('.form-section-header p').textContent  = 'Fill in the details below to log a new task to the tracker.'
+
+  editingRow = null
+}
+
+function submitForm(){
+  const v = getFormValues()
+
+  if(editingRow){
+    editingRow.style.opacity = '1'
+    populateRow(editingRow, v.industry, v.name, v.owner, v.estimated, v.actual, v.priority, v.status, v.deadline)
+    editingRow = null
+  } else {
+    insertRow(v.industry, v.name, v.owner, v.estimated, v.actual, v.priority, v.status, v.deadline)
+  }
+
+  clearForm()
+  updateStats()
+}
+
+function deleteTask(btn){
+  const row = btn.closest('tr')
+  if(row === editingRow) clearForm()
+  row.remove()
+  updateStats()
+}
+
+function editTask(btn){
+  const row = btn.closest('tr')
+
+  if(editingRow && editingRow !== row) editingRow.style.opacity = '1'
+  editingRow = row
+
+  document.getElementById('industry').value       = row.dataset.industry
+  document.getElementById('taskName').value       = row.dataset.name
+  document.getElementById('owner').value          = row.dataset.owner
+  document.getElementById('estimatedTime').value  = row.dataset.estimated
+  document.getElementById('actualTime').value     = row.dataset.actual
+  document.getElementById('priority').value       = row.dataset.priority
+  document.getElementById('status').value         = row.dataset.status
+  document.getElementById('deadline').value       = row.dataset.deadline
+
+  row.style.opacity = '0.35'
+
+  const btn2 = document.getElementById('submitBtn')
+  btn2.textContent = 'Update Task'
+  btn2.classList.add('updating')
+
+  const form = document.getElementById('formSection')
+  form.classList.add('editing')
+  form.querySelector('.form-section-header h2').textContent = 'Edit Task'
+  form.querySelector('.form-section-header p').textContent  = 'Modify the fields below and click Update Task to save changes.'
+
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+/* ── Preloaded tasks ── */
+window.onload = function(){
+  const tasks = [
+    // Original tasks
+    ["Software",    "Frontend UI Development",    "Aarav Sharma",   "240", "210", "High",   "In Progress", "2026-03-15"],
+    ["Software",    "API Integration",            "Neha Patel",     "180", "160", "High",   "Completed",   "2026-03-12"],
+
+    // New tasks (under-100% efficiency) inserted in the middle
+    ["Education",   "Curriculum Design Sprint",   "Divya Iyer",     "300", "380", "High",   "In Progress", "2026-03-22"],
+    ["Education",   "LMS Content Upload",         "Arjun Nair",     "120", "155", "Medium", "Completed",   "2026-03-18"],
+    ["Logistics",   "Route Optimisation Review",  "Kiran Desai",    "200", "260", "High",   "In Progress", "2026-03-25"],
+    ["Logistics",   "Warehouse Audit Prep",       "Sunita Rao",     "180", "220", "Medium", "Pending",     "2026-03-28"],
+    ["Operations",  "SOP Documentation",          "Rahul Bose",     "150", "190", "Low",    "In Progress", "2026-03-21"],
+    ["Operations",  "Vendor Onboarding Process",  "Meera Kapoor",   "240", "310", "High",   "Pending",     "2026-03-30"],
+
+    // Original tasks continued
+    ["Software",    "Database Optimization",      "Rohan Gupta",    "200", "0",   "Medium", "Pending",     "2026-03-20"],
+    ["Software",    "Bug Fixing Sprint",          "Ananya Singh",   "150", "140", "Medium", "Completed",   "2026-03-10"],
+    ["Software",    "Authentication Module",      "Vikram Rao",     "220", "180", "High",   "In Progress", "2026-03-18"]
+  ]
+
+  tasks.forEach(t => insertRow(t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7]))
+}
+
+</script>
+
+
+
+              //BACKEND
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+
+const supabaseUrl = "https://tfcftrefcfnglkvzyurv.supabase.co"
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmY2Z0cmVmY2ZuZ2xrdnp5dXJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4MTA1ODMsImV4cCI6MjA5NDM4NjU4M30.-RlCHDvvrjoNGkmPk4gEiDwTINHypdPLoEUZ_Fzx9-Q"
+
+const supabaseClient = supabase.createClient(
+supabaseUrl,
+supabaseKey
+)
+</script>
+
+<script>
+
+async function testConnection(){
+
+const { data, error } = await supabaseClient
+.from("workflow_tasks")
+.select("*")
+
+console.log(data)
+
+}
+
+testConnection()
+</script>
+</body>
+</html>

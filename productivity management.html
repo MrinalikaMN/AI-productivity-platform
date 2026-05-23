@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Productivity Tracker — AI Productivity Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --navy:       #0b1f3a;
+  --navy-mid:   #0f2a5c;
+  --navy-card:  #0d2244;
+  --accent:     #c8a96e;
+  --accent-dim: rgba(200,169,110,0.12);
+  --white:      #ffffff;
+  --muted:      rgba(255,255,255,0.45);
+  --border:     rgba(255,255,255,0.08);
+  --prod:       #72d49a;
+  --unprod:     #f08080;
+  --neutral:    #7ba8f0;
+  --meeting:    #b07ae0;
+  --break:      #e0c47a;
+}
+html { scroll-behavior:smooth; }
+body { font-family:'DM Sans',sans-serif; background:var(--navy); color:var(--white); margin:0; line-height:1.6; }
+
+/* ── NAVBAR ── */
+header { position:fixed; top:0; left:0; right:0; z-index:100; padding:0 64px; height:72px; display:flex; justify-content:space-between; align-items:center; background:rgba(11,31,58,0.9); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+.logo { font-family:'DM Serif Display',serif; font-size:20px; color:var(--white); text-decoration:none; display:flex; align-items:center; gap:10px; }
+.logo-dot { width:8px; height:8px; background:var(--accent); border-radius:50%; animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
+nav { display:flex; align-items:center; gap:28px; }
+nav a { text-decoration:none; color:var(--muted); font-size:14px; font-weight:500; transition:color .2s; position:relative; }
+nav a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1px; background:var(--accent); transition:width .3s; }
+nav a:hover { color:var(--white); } nav a:hover::after { width:100%; }
+nav a.active { color:var(--white); } nav a.active::after { width:100%; }
+.nav-cta { padding:9px 22px; background:var(--accent); color:var(--navy)!important; border-radius:8px; font-weight:600!important; font-size:13px!important; }
+.nav-cta::after { display:none!important; }
+.nav-cta:hover { background:#d4b87a!important; transform:translateY(-1px); box-shadow:0 6px 20px rgba(200,169,110,.35); }
+
+/* ── HERO ── */
+.page-hero { padding:130px 64px 56px; position:relative; overflow:hidden; }
+.page-hero::before { content:''; position:absolute; top:-80px; right:-80px; width:500px; height:500px; background:radial-gradient(circle,rgba(31,78,163,.14) 0%,transparent 70%); border-radius:50%; pointer-events:none; }
+.page-hero::after { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px); background-size:60px 60px; mask-image:radial-gradient(ellipse 70% 80% at 75% 30%,black 0%,transparent 100%); pointer-events:none; }
+.hero-inner { position:relative; z-index:1; max-width:1100px; display:flex; justify-content:space-between; align-items:flex-end; gap:40px; flex-wrap:wrap; }
+.hero-eyebrow { display:inline-flex; align-items:center; gap:10px; font-size:11px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--accent); margin-bottom:20px; opacity:0; animation:fadeUp .6s .1s ease forwards; }
+.eyebrow-line { width:28px; height:1px; background:var(--accent); }
+.page-hero h1 { font-family:'DM Serif Display',serif; font-size:clamp(36px,4.5vw,56px); line-height:1.06; letter-spacing:-.8px; color:var(--white); margin-bottom:18px; opacity:0; animation:fadeUp .6s .22s ease forwards; }
+.page-hero h1 em { font-style:italic; color:var(--accent); }
+.page-hero > .hero-inner > .hero-left > p { font-size:16px; color:var(--muted); font-weight:300; max-width:500px; line-height:1.75; opacity:0; animation:fadeUp .6s .36s ease forwards; }
+
+/* hero date + filter card */
+.hero-controls { background:var(--navy-card); border:1px solid var(--border); border-radius:16px; padding:28px 32px; min-width:300px; flex-shrink:0; opacity:0; animation:fadeUp .6s .5s ease forwards; display:flex; flex-direction:column; gap:16px; }
+.ctrl-row { display:flex; flex-direction:column; gap:6px; }
+.ctrl-label { font-size:11px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); }
+.ctrl-input { padding:11px 14px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:10px; color:var(--white); font-family:'DM Sans',sans-serif; font-size:14px; outline:none; transition:all .25s; appearance:none; -webkit-appearance:none; width:100%; }
+.ctrl-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(200,169,110,.15); }
+.ctrl-input option { background:#0d2244; }
+.ctrl-input::-webkit-calendar-picker-indicator { filter:invert(1) opacity(.5); cursor:pointer; }
+
+/* ── STATS ── */
+.stats-bar { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin:0 64px 48px; opacity:0; animation:fadeUp .6s .6s ease forwards; }
+.stat-tile { background:var(--navy-card); border:1px solid var(--border); border-radius:14px; padding:22px 24px; position:relative; overflow:hidden; transition:all .3s; }
+.stat-tile::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:0 2px 2px 0; }
+.st-prod::before   { background:var(--prod); }
+.st-unprod::before { background:var(--unprod); }
+.st-meet::before   { background:var(--meeting); }
+.st-break::before  { background:var(--break); }
+.st-ratio::before  { background:var(--accent); }
+.stat-tile:hover { background:rgba(255,255,255,.04); transform:translateY(-2px); }
+.stat-num { font-family:'DM Serif Display',serif; font-size:36px; line-height:1; margin-bottom:4px; }
+.st-prod   .stat-num { color:var(--prod); }
+.st-unprod .stat-num { color:var(--unprod); }
+.st-meet   .stat-num { color:var(--meeting); }
+.st-break  .stat-num { color:var(--break); }
+.st-ratio  .stat-num { color:var(--accent); }
+.stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; font-weight:500; }
+
+/* ── DIVIDER ── */
+.divider { height:1px; background:var(--border); margin:0 64px 40px; }
+
+/* ── TABS ── */
+.tabs-bar { display:flex; gap:4px; margin:0 64px 32px; background:var(--navy-card); border:1px solid var(--border); border-radius:12px; padding:6px; width:fit-content; }
+.tab-btn { padding:10px 26px; border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; background:transparent; color:var(--muted); transition:all .2s; }
+.tab-btn.active { background:var(--accent); color:var(--navy); font-weight:600; }
+.tab-btn:not(.active):hover { color:var(--white); background:rgba(255,255,255,.05); }
+
+/* ── LOG FORM ── */
+.form-section { margin:0 64px 40px; background:var(--navy-card); border:1px solid var(--border); border-radius:20px; padding:40px; transition:border-color .3s, box-shadow .3s; }
+.form-section.editing { border-color:rgba(200,169,110,.45); box-shadow:0 0 0 3px rgba(200,169,110,.08); }
+.form-hdr { margin-bottom:28px; }
+.form-hdr h2 { font-family:'DM Serif Display',serif; font-size:22px; color:var(--white); margin-bottom:4px; }
+.form-hdr p { font-size:13px; color:var(--muted); }
+.log-grid { display:grid; grid-template-columns:2fr 1.5fr 1fr 1fr 1fr 1fr auto auto; gap:14px; align-items:end; }
+.fg { display:flex; flex-direction:column; gap:7px; }
+.fg label { font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--muted); }
+.fg input, .fg select { padding:11px 14px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:10px; color:var(--white); font-family:'DM Sans',sans-serif; font-size:14px; outline:none; transition:all .25s; appearance:none; -webkit-appearance:none; }
+.fg input::placeholder { color:rgba(255,255,255,.25); }
+.fg input:focus, .fg select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(200,169,110,.15); background:rgba(255,255,255,.09); }
+.fg select option { background:#0d2244; }
+.submit-btn { padding:11px 22px; background:var(--accent); color:var(--navy); border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .25s; }
+.submit-btn:hover { background:#d4b87a; transform:translateY(-2px); box-shadow:0 8px 24px rgba(200,169,110,.3); }
+.submit-btn.update { background:#7ba8f0; color:var(--navy); }
+.cancel-btn { padding:11px 16px; background:rgba(255,255,255,.05); color:var(--muted); border:1px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; transition:all .25s; display:none; white-space:nowrap; }
+.cancel-btn:hover { background:rgba(255,255,255,.1); color:var(--white); }
+
+/* ── SECTION PANEL ── */
+.section-panel { margin:0 64px 60px; }
+.panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+.panel-header h2 { font-family:'DM Serif Display',serif; font-size:26px; color:var(--white); }
+.panel-header p { font-size:13px; color:var(--muted); margin-top:4px; }
+.record-count { font-size:13px; color:var(--muted); background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:20px; padding:6px 16px; }
+
+/* ── TABLE ── */
+.table-wrap { background:var(--navy-card); border:1px solid var(--border); border-radius:20px; overflow:hidden; overflow-x:auto; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+table { width:100%; border-collapse:collapse; min-width:980px; }
+thead tr { background:rgba(255,255,255,.04); border-bottom:1px solid var(--border); }
+th { text-align:left; font-size:11px; font-weight:600; color:rgba(255,255,255,.35); padding:14px 18px; text-transform:uppercase; letter-spacing:.8px; white-space:nowrap; }
+tbody tr { border-bottom:1px solid rgba(255,255,255,.04); transition:background .2s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:rgba(255,255,255,.025); }
+tbody tr.editing-row { background:rgba(200,169,110,.05); opacity:.45; }
+td { padding:15px 18px; font-size:13px; color:rgba(255,255,255,.7); white-space:nowrap; }
+
+/* Category badge */
+.cat-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; font-size:11px; font-weight:600; }
+.cat-productive   { background:rgba(114,212,154,.15); color:var(--prod);    border:1px solid rgba(114,212,154,.25); }
+.cat-unproductive { background:rgba(240,128,128,.15); color:var(--unprod);  border:1px solid rgba(240,128,128,.25); }
+.cat-meeting      { background:rgba(176,122,224,.15); color:var(--meeting); border:1px solid rgba(176,122,224,.25); }
+.cat-break        { background:rgba(224,196,122,.15); color:var(--break);   border:1px solid rgba(224,196,122,.25); }
+.cat-neutral      { background:rgba(123,168,240,.15); color:var(--neutral); border:1px solid rgba(123,168,240,.25); }
+
+/* Split bar */
+.split-bar { display:flex; height:8px; border-radius:4px; overflow:hidden; width:120px; background:rgba(255,255,255,.06); }
+.split-prod   { background:var(--prod); }
+.split-unprod { background:var(--unprod); }
+
+/* Action btns */
+.act-btn { padding:5px 12px; border:none; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; transition:all .2s; }
+.edit-btn   { background:rgba(200,169,110,.15); color:var(--accent); border:1px solid rgba(200,169,110,.25); margin-right:6px; }
+.edit-btn:hover { background:rgba(200,169,110,.28); }
+.del-btn    { background:rgba(240,128,128,.15); color:var(--unprod); border:1px solid rgba(240,128,128,.25); }
+.del-btn:hover  { background:rgba(240,128,128,.28); }
+
+/* ── INDIVIDUAL VIEW ── */
+.ind-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; margin:0 64px 60px; }
+.ind-card { background:var(--navy-card); border:1px solid var(--border); border-radius:18px; padding:28px; transition:all .3s; }
+.ind-card:hover { border-color:rgba(200,169,110,.2); transform:translateY(-2px); box-shadow:0 12px 36px rgba(0,0,0,.2); }
+.ind-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.ind-info { display:flex; align-items:center; gap:12px; }
+.ind-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,var(--navy-mid),#1f4ea3); border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'DM Serif Display',serif; font-size:16px; color:var(--accent); flex-shrink:0; }
+.ind-name { font-size:15px; font-weight:600; color:var(--white); }
+.ind-dept { font-size:12px; color:var(--muted); }
+.ind-score { font-family:'DM Serif Display',serif; font-size:24px; }
+
+.ind-donut-row { display:flex; justify-content:center; margin:16px 0 20px; position:relative; }
+.donut-svg { transform:rotate(-90deg); }
+.donut-track { fill:none; stroke:rgba(255,255,255,.06); stroke-width:10; }
+.donut-prod  { fill:none; stroke:var(--prod);   stroke-width:10; stroke-linecap:round; transition:stroke-dasharray 1s ease; }
+.donut-unprod{ fill:none; stroke:var(--unprod); stroke-width:10; stroke-linecap:round; transition:stroke-dasharray 1s ease; }
+.donut-meet  { fill:none; stroke:var(--meeting);stroke-width:10; stroke-linecap:round; transition:stroke-dasharray 1s ease; }
+.donut-lbl { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
+.donut-lbl-num { font-family:'DM Serif Display',serif; font-size:20px; color:var(--white); line-height:1; }
+.donut-lbl-sub { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+
+.ind-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
+.ind-stat { padding:10px 6px; border-radius:8px; background:rgba(255,255,255,.03); border:1px solid var(--border); text-align:center; }
+.ind-stat-num { font-weight:700; font-size:16px; margin-bottom:2px; }
+.ind-stat-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; }
+
+.ratio-bar { display:flex; height:8px; border-radius:4px; overflow:hidden; gap:2px; }
+.ratio-seg { border-radius:2px; transition:width .8s ease; }
+
+/* ── TEAM VIEW ── */
+.team-section { margin:0 64px 60px; }
+.team-card { background:var(--navy-card); border:1px solid var(--border); border-radius:20px; overflow:hidden; margin-bottom:20px; }
+.team-header-row { display:flex; justify-content:space-between; align-items:center; padding:24px 32px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .2s; }
+.team-header-row:hover { background:rgba(255,255,255,.025); }
+.team-left { display:flex; align-items:center; gap:16px; }
+.team-badge { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.team-name { font-family:'DM Serif Display',serif; font-size:20px; color:var(--white); }
+.team-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+.team-right { display:flex; align-items:center; gap:32px; }
+.team-stat { text-align:right; }
+.team-stat-num { font-family:'DM Serif Display',serif; font-size:22px; color:var(--white); }
+.team-stat-lbl { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+.team-ratio-wrap { width:160px; }
+.team-ratio-bar { display:flex; height:8px; border-radius:4px; overflow:hidden; }
+.team-ratio-lbl { display:flex; justify-content:space-between; margin-top:5px; font-size:10px; color:var(--muted); }
+.team-body { padding:20px 32px 28px; }
+.team-members { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+.member-row { display:flex; align-items:center; gap:12px; padding:14px 16px; background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:12px; transition:all .2s; }
+.member-row:hover { background:rgba(255,255,255,.06); border-color:rgba(200,169,110,.2); }
+.member-init { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--navy-mid),#1f4ea3); display:flex; align-items:center; justify-content:center; font-family:'DM Serif Display',serif; font-size:13px; color:var(--accent); flex-shrink:0; }
+.member-info { flex:1; min-width:0; }
+.member-name { font-size:13px; font-weight:500; color:var(--white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.member-hours { font-size:11px; color:var(--muted); }
+.member-bar-wrap { width:80px; flex-shrink:0; }
+.member-bar { display:flex; height:6px; border-radius:3px; overflow:hidden; }
+.member-pct { font-size:12px; font-weight:600; margin-top:3px; }
+
+/* ── LEGEND ── */
+.legend { display:flex; gap:20px; flex-wrap:wrap; margin:0 64px 24px; }
+.legend-item { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
+.leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* ── EMPTY ── */
+.empty-state { text-align:center; padding:60px 40px; color:var(--muted); }
+.es-icon { font-size:36px; margin-bottom:12px; }
+.es-text { font-size:14px; }
+
+/* ── FOOTER ── */
+footer { background:#060f1e; border-top:1px solid var(--border); padding:40px 64px; display:flex; justify-content:space-between; align-items:center; }
+.footer-copy  { font-size:13px; color:rgba(255,255,255,.2); }
+.footer-badge { font-size:12px; color:rgba(255,255,255,.18); }
+
+.hidden { display:none!important; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+@media(max-width:1100px){
+  header,.page-hero{padding-left:40px;padding-right:40px}
+  .stats-bar,.tabs-bar,.form-section,.section-panel,.ind-grid,.team-section,.legend,.divider{margin-left:40px;margin-right:40px}
+  .stats-bar{grid-template-columns:repeat(3,1fr)}
+  .log-grid{grid-template-columns:1fr 1fr 1fr}
+  .hero-inner{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:700px){
+  header{padding:0 24px}
+  .page-hero{padding:110px 24px 40px}
+  .stats-bar,.tabs-bar,.form-section,.section-panel,.ind-grid,.team-section,.legend,.divider{margin-left:24px;margin-right:24px}
+  .stats-bar{grid-template-columns:1fr 1fr}
+  .log-grid{grid-template-columns:1fr}
+  footer{padding:32px 24px;flex-direction:column;gap:10px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header>
+  <a href="index.html" class="logo"><div class="logo-dot"></div>AI Productivity</a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="productivity.html" class="active">Productivity Timeline</a>
+    <a href="about.html">About</a>
+    <a href="workflow_tracker.html" class="nav-cta">Get Started</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-eyebrow"><span class="eyebrow-line"></span>Time Productivity Tracker</div>
+      <h1>Productive time.<br><em>Measured precisely.</em></h1>
+      <p>Log and analyse how every hour is spent — across individuals and teams. Identify where productive time is lost and where focus thrives.</p>
+    </div>
+    <div class="hero-controls">
+      <div class="ctrl-row">
+        <span class="ctrl-label">Filter by Date</span>
+        <input type="date" class="ctrl-input" id="filterDate">
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Filter by Team</span>
+        <select class="ctrl-input" id="filterTeam">
+          <option value="">All Teams</option>
+          <option>Software</option>
+          <option>Education</option>
+          <option>Logistics</option>
+          <option>Operations</option>
+          <option>Finance</option>
+          <option>HR</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Filter by Category</span>
+        <select class="ctrl-input" id="filterCat">
+          <option value="">All Categories</option>
+          <option>Productive</option>
+          <option>Unproductive</option>
+          <option>Meeting</option>
+          <option>Break</option>
+          <option>Neutral</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-tile st-prod">  <div class="stat-num" id="sProd">0h</div><div class="stat-label">Productive Hours</div></div>
+  <div class="stat-tile st-unprod"><div class="stat-num" id="sUnprod">0h</div><div class="stat-label">Unproductive Hours</div></div>
+  <div class="stat-tile st-meet">  <div class="stat-num" id="sMeet">0h</div><div class="stat-label">In Meetings</div></div>
+  <div class="stat-tile st-break"> <div class="stat-num" id="sBreak">0h</div><div class="stat-label">Break / Idle</div></div>
+  <div class="stat-tile st-ratio"> <div class="stat-num" id="sRatio">—</div><div class="stat-label">Productivity Ratio</div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('log')">Activity Log</button>
+  <button class="tab-btn"        onclick="switchTab('individual')">Individual View</button>
+  <button class="tab-btn"        onclick="switchTab('team')">Team View</button>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><div class="leg-dot" style="background:var(--prod)"></div>Productive</div>
+  <div class="legend-item"><div class="leg-dot" style="background:var(--unprod)"></div>Unproductive</div>
+  <div class="legend-item"><div class="leg-dot" style="background:var(--meeting)"></div>Meeting</div>
+  <div class="legend-item"><div class="leg-dot" style="background:var(--break)"></div>Break / Idle</div>
+  <div class="legend-item"><div class="leg-dot" style="background:var(--neutral)"></div>Neutral</div>
+</div>
+
+<!-- LOG FORM -->
+<div class="form-section" id="logForm">
+  <div class="form-hdr">
+    <h2 id="formTitle">Log Time Activity</h2>
+    <p id="formSubtitle">Record a time block for an employee — productive, unproductive, or otherwise.</p>
+  </div>
+  <div class="log-grid">
+    <div class="fg"><label>Employee Name</label><input type="text" id="fName" placeholder="e.g. Aarav Sharma"></div>
+    <div class="fg"><label>Department</label>
+      <select id="fDept">
+        <option>Software</option><option>Education</option><option>Logistics</option>
+        <option>Operations</option><option>Finance</option><option>HR</option>
+      </select>
+    </div>
+    <div class="fg"><label>Date</label><input type="date" id="fDate"></div>
+    <div class="fg"><label>Activity</label><input type="text" id="fActivity" placeholder="e.g. Code Review"></div>
+    <div class="fg"><label>Hours</label><input type="number" id="fHours" placeholder="e.g. 2.5" min="0.25" max="12" step="0.25"></div>
+    <div class="fg"><label>Category</label>
+      <select id="fCat">
+        <option>Productive</option><option>Unproductive</option>
+        <option>Meeting</option><option>Break</option><option>Neutral</option>
+      </select>
+    </div>
+    <div style="display:flex;flex-direction:column;justify-content:flex-end">
+      <button class="submit-btn" id="submitBtn" onclick="submitLog()">+ Add Log</button>
+    </div>
+    <div style="display:flex;flex-direction:column;justify-content:flex-end">
+      <button class="cancel-btn" id="cancelBtn" onclick="cancelEdit()">✕ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG TABLE PANEL -->
+<div class="section-panel" id="logPanel">
+  <div class="panel-header">
+    <div>
+      <h2>Activity Log</h2>
+      <p id="logSubtitle">All time entries across the organisation</p>
+    </div>
+    <span class="record-count" id="logCount">0 entries</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Employee</th><th>Department</th><th>Date</th>
+          <th>Activity</th><th>Hours</th><th>Category</th><th>P / U Split</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="logBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- INDIVIDUAL PANEL -->
+<div id="indPanel" class="hidden">
+  <div class="panel-header" style="margin:0 64px 24px">
+    <div><h2>Individual Breakdown</h2><p>Productive vs unproductive time per employee</p></div>
+  </div>
+  <div class="ind-grid" id="indGrid"></div>
+</div>
+
+<!-- TEAM PANEL -->
+<div id="teamPanel" class="hidden">
+  <div class="panel-header" style="margin:0 64px 24px">
+    <div><h2>Team Breakdown</h2><p>Aggregated productivity across departments</p></div>
+  </div>
+  <div class="team-section" id="teamSection"></div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p class="footer-copy">© 2026 AI Productivity Platform. All rights reserved.</p>
+  <p class="footer-badge">✦ Time & Productivity Research Project</p>
+</footer>
+
+<script>
+/* ═══════════════════════════════
+   DATA
+═══════════════════════════════ */
+let logs = [], logId = 1, editingId = null, activeTab = 'log'
+
+const TEAM_ICONS = { Software:'💻', Education:'🎓', Logistics:'🚚', Operations:'⚙️', Finance:'💰', HR:'👥' }
+const TEAM_COLORS = { Software:'#7ba8f0', Education:'#72d49a', Logistics:'#e0c47a', Operations:'#f08080', Finance:'#c8a96e', HR:'#b07ae0' }
+
+function todayStr(){ return new Date().toISOString().slice(0,10) }
+
+/* ── filter state ── */
+function getFilters(){
+  return {
+    date: document.getElementById('filterDate').value,
+    team: document.getElementById('filterTeam').value,
+    cat:  document.getElementById('filterCat').value
+  }
+}
+
+function applyFilters(data){
+  const f = getFilters()
+  return data.filter(r =>
+    (!f.date || r.date === f.date) &&
+    (!f.team || r.dept === f.team) &&
+    (!f.cat  || r.category === f.cat)
+  )
+}
+
+/* ── Category helpers ── */
+function catClass(c){
+  return { Productive:'cat-productive', Unproductive:'cat-unproductive', Meeting:'cat-meeting', Break:'cat-break', Neutral:'cat-neutral' }[c] || 'cat-neutral'
+}
+function catIcon(c){
+  return { Productive:'▲', Unproductive:'▼', Meeting:'◆', Break:'●', Neutral:'—' }[c] || '—'
+}
+function catColor(c){
+  return { Productive:'var(--prod)', Unproductive:'var(--unprod)', Meeting:'var(--meeting)', Break:'var(--break)', Neutral:'var(--neutral)' }[c] || '#aaa'
+}
+
+/* ── Dept badge ── */
+function deptSpan(d){ return `<span style="font-size:12px;font-weight:600;color:${TEAM_COLORS[d]||'#aaa'}">${d}</span>` }
+
+/* ── Stats bar ── */
+function updateStats(filtered){
+  let prod=0, unprod=0, meet=0, brk=0
+  filtered.forEach(r=>{
+    const h = parseFloat(r.hours)||0
+    if(r.category==='Productive')   prod   += h
+    if(r.category==='Unproductive') unprod += h
+    if(r.category==='Meeting')      meet   += h
+    if(r.category==='Break')        brk    += h
+  })
+  const total = prod+unprod+meet+brk
+  const ratio = (prod+unprod) > 0 ? Math.round((prod/(prod+unprod))*100)+'%' : '—'
+  document.getElementById('sProd').textContent   = prod.toFixed(1)+'h'
+  document.getElementById('sUnprod').textContent = unprod.toFixed(1)+'h'
+  document.getElementById('sMeet').textContent   = meet.toFixed(1)+'h'
+  document.getElementById('sBreak').textContent  = brk.toFixed(1)+'h'
+  document.getElementById('sRatio').textContent  = ratio
+}
+
+/* ═══════════════════════════════
+   RENDER LOG TABLE
+═══════════════════════════════ */
+function renderLog(){
+  const body = document.getElementById('logBody')
+  body.innerHTML = ''
+  const f = applyFilters(logs).sort((a,b)=> b.date.localeCompare(a.date) || a.name.localeCompare(b.name))
+
+  document.getElementById('logCount').textContent = f.length + (f.length===1?' entry':' entries')
+  const sub = getFilters().date ? 'Showing entries for '+getFilters().date : 'All time entries across the organisation'
+  document.getElementById('logSubtitle').textContent = sub
+
+  if(!f.length){
+    body.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="es-icon">📊</div><div class="es-text">No entries match the current filters. Add a log above or adjust filters.</div></div></td></tr>`
+    updateStats([])
+    return
+  }
+
+  f.forEach((r,i)=>{
+    const h = parseFloat(r.hours)||0
+    const isProd   = r.category==='Productive'
+    const isUnprod = r.category==='Unproductive'
+    // P/U split bar: only meaningful for productive/unproductive
+    const splitHTML = (isProd||isUnprod)
+      ? `<div class="split-bar">
+           <div class="split-prod"   style="width:${isProd?100:0}%"></div>
+           <div class="split-unprod" style="width:${isUnprod?100:0}%"></div>
+         </div>`
+      : `<span style="color:var(--muted);font-size:11px">${r.category}</span>`
+
+    const tr = document.createElement('tr')
+    if(r.id===editingId) tr.classList.add('editing-row')
+    tr.innerHTML=`
+      <td style="color:var(--muted);font-size:12px">${i+1}</td>
+      <td><span style="font-weight:500;color:var(--white)">${r.name}</span></td>
+      <td>${deptSpan(r.dept)}</td>
+      <td style="color:var(--muted);font-size:12px">${r.date}</td>
+      <td style="color:rgba(255,255,255,.8)">${r.activity}</td>
+      <td><span style="font-weight:600;color:${catColor(r.category)}">${h}h</span></td>
+      <td><span class="cat-badge ${catClass(r.category)}">${catIcon(r.category)} ${r.category}</span></td>
+      <td>${splitHTML}</td>
+      <td>
+        <button class="act-btn edit-btn" onclick="editLog(${r.id})">Edit</button>
+        <button class="act-btn del-btn"  onclick="deleteLog(${r.id})">Remove</button>
+      </td>`
+    body.appendChild(tr)
+  })
+  updateStats(f)
+}
+
+/* ═══════════════════════════════
+   RENDER INDIVIDUAL
+═══════════════════════════════ */
+function renderIndividual(){
+  const grid = document.getElementById('indGrid')
+  grid.innerHTML = ''
+  const f = applyFilters(logs)
+
+  // group by name
+  const map = {}
+  f.forEach(r=>{
+    if(!map[r.name]) map[r.name]={name:r.name, dept:r.dept, entries:[]}
+    map[r.name].entries.push(r)
+  })
+
+  const people = Object.values(map).sort((a,b)=>a.name.localeCompare(b.name))
+
+  if(!people.length){
+    grid.innerHTML=`<div style="grid-column:1/-1"><div class="empty-state"><div class="es-icon">👤</div><div class="es-text">No individual data matches the current filters.</div></div></div>`
+    return
+  }
+
+  people.forEach(p=>{
+    let prod=0, unprod=0, meet=0, brk=0, neutral=0
+    p.entries.forEach(r=>{
+      const h=parseFloat(r.hours)||0
+      if(r.category==='Productive')   prod    +=h
+      if(r.category==='Unproductive') unprod  +=h
+      if(r.category==='Meeting')      meet    +=h
+      if(r.category==='Break')        brk     +=h
+      if(r.category==='Neutral')      neutral +=h
+    })
+    const total = prod+unprod+meet+brk+neutral || 1
+    const ratio = (prod+unprod)>0 ? Math.round((prod/(prod+unprod))*100) : null
+    const ratioClr = ratio===null ? 'var(--muted)' : ratio>=70 ? 'var(--prod)' : ratio>=45 ? 'var(--break)' : 'var(--unprod)'
+    const ini = p.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+
+    // donut segments (circumference = 2π×40 ≈ 251.2)
+    const C = 251.2
+    const pProd    = (prod/total)*C
+    const pUnprod  = (unprod/total)*C
+    const pMeet    = (meet/total)*C
+    const off0 = 0
+    const off1 = pProd
+    const off2 = off1+pUnprod
+
+    const card = document.createElement('div')
+    card.className = 'ind-card'
+    card.innerHTML=`
+      <div class="ind-top">
+        <div class="ind-info">
+          <div class="ind-avatar">${ini}</div>
+          <div><div class="ind-name">${p.name}</div><div class="ind-dept">${p.dept}</div></div>
+        </div>
+        <div class="ind-score" style="color:${ratioClr}">${ratio!==null?ratio+'%':'—'}</div>
+      </div>
+
+      <div class="ind-donut-row">
+        <svg class="donut-svg" width="110" height="110" viewBox="0 0 110 110">
+          <circle class="donut-track" cx="55" cy="55" r="40"/>
+          <circle class="donut-prod"   cx="55" cy="55" r="40"
+            stroke-dasharray="${pProd} ${C-pProd}"
+            stroke-dashoffset="${-off0}"/>
+          <circle class="donut-unprod" cx="55" cy="55" r="40"
+            stroke-dasharray="${pUnprod} ${C-pUnprod}"
+            stroke-dashoffset="${-off1}"/>
+          <circle class="donut-meet"   cx="55" cy="55" r="40"
+            stroke-dasharray="${pMeet} ${C-pMeet}"
+            stroke-dashoffset="${-off2}"/>
+        </svg>
+        <div class="donut-lbl">
+          <div class="donut-lbl-num">${(prod+unprod+meet+brk+neutral).toFixed(1)}h</div>
+          <div class="donut-lbl-sub">Total</div>
+        </div>
+      </div>
+
+      <div class="ind-stats">
+        <div class="ind-stat"><div class="ind-stat-num" style="color:var(--prod)">${prod.toFixed(1)}h</div><div class="ind-stat-lbl">Productive</div></div>
+        <div class="ind-stat"><div class="ind-stat-num" style="color:var(--unprod)">${unprod.toFixed(1)}h</div><div class="ind-stat-lbl">Unproductive</div></div>
+        <div class="ind-stat"><div class="ind-stat-num" style="color:var(--meeting)">${meet.toFixed(1)}h</div><div class="ind-stat-lbl">Meetings</div></div>
+      </div>
+
+      <div class="ratio-bar">
+        <div class="ratio-seg" style="width:${(prod/total*100).toFixed(1)}%;background:var(--prod)"></div>
+        <div class="ratio-seg" style="width:${(unprod/total*100).toFixed(1)}%;background:var(--unprod)"></div>
+        <div class="ratio-seg" style="width:${(meet/total*100).toFixed(1)}%;background:var(--meeting)"></div>
+        <div class="ratio-seg" style="width:${(brk/total*100).toFixed(1)}%;background:var(--break)"></div>
+        <div class="ratio-seg" style="width:${(neutral/total*100).toFixed(1)}%;background:var(--neutral)"></div>
+      </div>`
+    grid.appendChild(card)
+  })
+}
+
+/* ═══════════════════════════════
+   RENDER TEAM
+═══════════════════════════════ */
+function renderTeam(){
+  const sec = document.getElementById('teamSection')
+  sec.innerHTML = ''
+  const f = applyFilters(logs)
+
+  const map = {}
+  f.forEach(r=>{
+    if(!map[r.dept]) map[r.dept]={ dept:r.dept, entries:[], members:{} }
+    map[r.dept].entries.push(r)
+    if(!map[r.dept].members[r.name]) map[r.dept].members[r.name]={name:r.name, entries:[]}
+    map[r.dept].members[r.name].entries.push(r)
+  })
+
+  const teams = Object.values(map).sort((a,b)=>a.dept.localeCompare(b.dept))
+
+  if(!teams.length){
+    sec.innerHTML=`<div class="empty-state"><div class="es-icon">👥</div><div class="es-text">No team data matches the current filters.</div></div>`
+    return
+  }
+
+  teams.forEach(team=>{
+    let prod=0,unprod=0,meet=0,brk=0,neutral=0
+    team.entries.forEach(r=>{
+      const h=parseFloat(r.hours)||0
+      if(r.category==='Productive')   prod   +=h
+      if(r.category==='Unproductive') unprod +=h
+      if(r.category==='Meeting')      meet   +=h
+      if(r.category==='Break')        brk    +=h
+      if(r.category==='Neutral')      neutral+=h
+    })
+    const total = prod+unprod+meet+brk+neutral || 1
+    const ratio = (prod+unprod)>0 ? Math.round((prod/(prod+unprod))*100) : 0
+    const ratioClr = ratio>=70 ? 'var(--prod)' : ratio>=45 ? 'var(--break)' : 'var(--unprod)'
+    const members = Object.values(team.members).sort((a,b)=>a.name.localeCompare(b.name))
+
+    const membersHTML = members.map(m=>{
+      let mp=0,mu=0,mm=0,mb=0,mn=0
+      m.entries.forEach(r=>{
+        const h=parseFloat(r.hours)||0
+        if(r.category==='Productive')   mp+=h
+        if(r.category==='Unproductive') mu+=h
+        if(r.category==='Meeting')      mm+=h
+        if(r.category==='Break')        mb+=h
+        if(r.category==='Neutral')      mn+=h
+      })
+      const mt = mp+mu+mm+mb+mn||1
+      const mr = (mp+mu)>0 ? Math.round((mp/(mp+mu))*100) : null
+      const mrc = mr===null?'var(--muted)':mr>=70?'var(--prod)':mr>=45?'var(--break)':'var(--unprod)'
+      const ini = m.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+      return `
+        <div class="member-row">
+          <div class="member-init">${ini}</div>
+          <div class="member-info">
+            <div class="member-name">${m.name}</div>
+            <div class="member-hours">${mt.toFixed(1)}h total · ${mp.toFixed(1)}h prod</div>
+          </div>
+          <div class="member-bar-wrap">
+            <div class="member-bar">
+              <div style="width:${(mp/mt*100).toFixed(1)}%;background:var(--prod)"></div>
+              <div style="width:${(mu/mt*100).toFixed(1)}%;background:var(--unprod)"></div>
+              <div style="width:${(mm/mt*100).toFixed(1)}%;background:var(--meeting)"></div>
+              <div style="width:${(mb/mt*100).toFixed(1)}%;background:var(--break)"></div>
+            </div>
+            <div class="member-pct" style="color:${mrc}">${mr!==null?mr+'%':'—'}</div>
+          </div>
+        </div>`
+    }).join('')
+
+    const card = document.createElement('div')
+    card.className = 'team-card'
+    card.innerHTML=`
+      <div class="team-header-row" onclick="toggleTeam(this)">
+        <div class="team-left">
+          <div class="team-badge" style="background:rgba(255,255,255,0.04);border:1px solid var(--border)">${TEAM_ICONS[team.dept]||'🏢'}</div>
+          <div>
+            <div class="team-name">${team.dept}</div>
+            <div class="team-meta">${members.length} member${members.length===1?'':'s'} · ${team.entries.length} log entries</div>
+          </div>
+        </div>
+        <div class="team-right">
+          <div class="team-stat"><div class="team-stat-num" style="color:var(--prod)">${prod.toFixed(1)}h</div><div class="team-stat-lbl">Productive</div></div>
+          <div class="team-stat"><div class="team-stat-num" style="color:var(--unprod)">${unprod.toFixed(1)}h</div><div class="team-stat-lbl">Unproductive</div></div>
+          <div>
+            <div class="team-stat-num" style="color:${ratioClr}">${ratio}%</div>
+            <div class="team-ratio-bar" style="margin-top:6px">
+              <div style="width:${(prod/total*100).toFixed(1)}%;background:var(--prod)"></div>
+              <div style="width:${(unprod/total*100).toFixed(1)}%;background:var(--unprod)"></div>
+              <div style="width:${(meet/total*100).toFixed(1)}%;background:var(--meeting)"></div>
+              <div style="width:${(brk/total*100).toFixed(1)}%;background:var(--break)"></div>
+            </div>
+            <div class="team-ratio-lbl"><span style="color:var(--prod)">Prod</span><span style="color:var(--unprod)">Unprod</span></div>
+          </div>
+          <div style="font-size:18px;color:var(--muted);user-select:none">▾</div>
+        </div>
+      </div>
+      <div class="team-body" style="display:none">
+        <div class="team-members">${membersHTML}</div>
+      </div>`
+    sec.appendChild(card)
+  })
+}
+
+function toggleTeam(hdr){
+  const body = hdr.nextElementSibling
+  const arrow = hdr.querySelector('.team-right > div:last-child')
+  const open = body.style.display === 'block'
+  body.style.display = open ? 'none' : 'block'
+  if(arrow) arrow.textContent = open ? '▾' : '▴'
+}
+
+/* ═══════════════════════════════
+   ADD / EDIT / DELETE
+═══════════════════════════════ */
+function submitLog(){
+  const name     = document.getElementById('fName').value.trim()
+  const dept     = document.getElementById('fDept').value
+  const date     = document.getElementById('fDate').value || todayStr()
+  const activity = document.getElementById('fActivity').value.trim()
+  const hours    = document.getElementById('fHours').value
+  const category = document.getElementById('fCat').value
+
+  if(!name){ document.getElementById('fName').focus(); return }
+  if(!activity){ document.getElementById('fActivity').focus(); return }
+
+  if(editingId!==null){
+    const rec = logs.find(r=>r.id===editingId)
+    if(rec){ rec.name=name; rec.dept=dept; rec.date=date; rec.activity=activity; rec.hours=hours; rec.category=category }
+    cancelEdit()
+  } else {
+    logs.push({id:logId++,name,dept,date,activity,hours,category})
+    clearInputs()
+  }
+  renderAll()
+}
+
+function editLog(id){
+  const rec = logs.find(r=>r.id===id)
+  if(!rec) return
+  editingId = id
+  document.getElementById('fName').value     = rec.name
+  document.getElementById('fDept').value     = rec.dept
+  document.getElementById('fDate').value     = rec.date
+  document.getElementById('fActivity').value = rec.activity
+  document.getElementById('fHours').value    = rec.hours
+  document.getElementById('fCat').value      = rec.category
+  document.getElementById('formTitle').textContent    = 'Edit Activity Log'
+  document.getElementById('formSubtitle').textContent = `Editing: ${rec.name} — ${rec.activity} (${rec.date})`
+  document.getElementById('submitBtn').textContent    = '✓ Save Changes'
+  document.getElementById('submitBtn').classList.add('update')
+  document.getElementById('cancelBtn').style.display  = 'block'
+  document.getElementById('logForm').classList.add('editing')
+  document.getElementById('logForm').scrollIntoView({behavior:'smooth',block:'start'})
+  renderLog()
+}
+
+function cancelEdit(){
+  editingId = null
+  clearInputs()
+  document.getElementById('formTitle').textContent    = 'Log Time Activity'
+  document.getElementById('formSubtitle').textContent = 'Record a time block for an employee — productive, unproductive, or otherwise.'
+  document.getElementById('submitBtn').textContent    = '+ Add Log'
+  document.getElementById('submitBtn').classList.remove('update')
+  document.getElementById('cancelBtn').style.display  = 'none'
+  document.getElementById('logForm').classList.remove('editing')
+  renderLog()
+}
+
+function clearInputs(){
+  document.getElementById('fName').value     = ''
+  document.getElementById('fActivity').value = ''
+  document.getElementById('fHours').value    = ''
+  document.getElementById('fCat').value      = 'Productive'
+  document.getElementById('fDept').value     = 'Software'
+  document.getElementById('fDate').value     = todayStr()
+}
+
+function deleteLog(id){
+  if(id===editingId) cancelEdit()
+  logs = logs.filter(r=>r.id!==id)
+  renderAll()
+}
+
+/* ── render all active panels ── */
+function renderAll(){
+  renderLog()
+  if(activeTab==='individual') renderIndividual()
+  if(activeTab==='team')       renderTeam()
+}
+
+/* ── tabs ── */
+function switchTab(tab){
+  activeTab=tab
+  const names=['log','individual','team']
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',names[i]===tab))
+  document.getElementById('logPanel').classList.toggle('hidden',  tab!=='log')
+  document.getElementById('logForm').classList.toggle('hidden',   tab!=='log')
+  document.getElementById('indPanel').classList.toggle('hidden',  tab!=='individual')
+  document.getElementById('teamPanel').classList.toggle('hidden', tab!=='team')
+  if(tab==='individual') renderIndividual()
+  if(tab==='team')       renderTeam()
+}
+
+/* ── filters ── */
+['filterDate','filterTeam','filterCat'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', renderAll)
+})
+
+/* ═══════════════════════════════
+   SEED DATA
+═══════════════════════════════ */
+window.onload=function(){
+  const t = todayStr()
+  const y = t.slice(0,4)
+
+  const seed=[
+    // ── TODAY ──
+    ['Aarav Sharma',    'Software',   t,           'Feature Development',    '3.5', 'Productive'],
+    ['Aarav Sharma',    'Software',   t,           'Sprint Planning Meeting', '1',   'Meeting'],
+    ['Aarav Sharma',    'Software',   t,           'Social Media Browsing',   '0.5', 'Unproductive'],
+    ['Aarav Sharma',    'Software',   t,           'Lunch Break',             '1',   'Break'],
+    ['Aarav Sharma',    'Software',   t,           'Code Review',             '2',   'Productive'],
+    ['Neha Patel',      'Software',   t,           'API Documentation',       '2.5', 'Productive'],
+    ['Neha Patel',      'Software',   t,           'Stand-up Meeting',        '0.5', 'Meeting'],
+    ['Neha Patel',      'Software',   t,           'Bug Investigation',       '2',   'Productive'],
+    ['Neha Patel',      'Software',   t,           'Idle / Admin',            '1',   'Unproductive'],
+    ['Rohan Gupta',     'Software',   t,           'Database Queries',        '2',   'Productive'],
+    ['Rohan Gupta',     'Software',   t,           'Team Sync',               '1',   'Meeting'],
+    ['Rohan Gupta',     'Software',   t,           'News Reading',            '1.5', 'Unproductive'],
+    ['Ananya Singh',    'Software',   t,           'UI Component Build',      '4',   'Productive'],
+    ['Ananya Singh',    'Software',   t,           'Design Review',           '1',   'Meeting'],
+    ['Ananya Singh',    'Software',   t,           'Break / Personal',        '1',   'Break'],
+    ['Vikram Rao',      'Software',   t,           'Testing & QA',            '2.5', 'Productive'],
+    ['Vikram Rao',      'Software',   t,           'Vendor Call',             '1',   'Meeting'],
+    ['Vikram Rao',      'Software',   t,           'Personal Tasks',          '1.5', 'Unproductive'],
+    ['Divya Iyer',      'Education',  t,           'Curriculum Design',       '3',   'Productive'],
+    ['Divya Iyer',      'Education',  t,           'Faculty Meeting',         '1',   'Meeting'],
+    ['Divya Iyer',      'Education',  t,           'Student Queries',         '2',   'Productive'],
+    ['Divya Iyer',      'Education',  t,           'Admin Work',              '1',   'Neutral'],
+    ['Arjun Nair',      'Education',  t,           'Content Creation',        '3.5', 'Productive'],
+    ['Arjun Nair',      'Education',  t,           'Idle Time',               '1',   'Unproductive'],
+    ['Arjun Nair',      'Education',  t,           'Planning Session',        '1',   'Meeting'],
+    ['Kiran Desai',     'Logistics',  t,           'Route Optimisation',      '3',   'Productive'],
+    ['Kiran Desai',     'Logistics',  t,           'Team Briefing',           '0.5', 'Meeting'],
+    ['Kiran Desai',     'Logistics',  t,           'Delay Handling',          '1.5', 'Neutral'],
+    ['Kiran Desai',     'Logistics',  t,           'Personal Break',          '1',   'Break'],
+    ['Sunita Rao',      'Logistics',  t,           'Vendor Coordination',     '2.5', 'Productive'],
+    ['Sunita Rao',      'Logistics',  t,           'Idle / Waiting',          '2',   'Unproductive'],
+    ['Rahul Bose',      'Operations', t,           'Process Documentation',   '2',   'Productive'],
+    ['Rahul Bose',      'Operations', t,           'Ops Review Meeting',      '1.5', 'Meeting'],
+    ['Rahul Bose',      'Operations', t,           'Data Entry',              '2',   'Productive'],
+    ['Meera Kapoor',    'Operations', t,           'SOP Review',              '2',   'Productive'],
+    ['Meera Kapoor',    'Operations', t,           'Social Browsing',         '1.5', 'Unproductive'],
+    ['Meera Kapoor',    'Operations', t,           'Team Check-in',           '0.5', 'Meeting'],
+    ['Siddharth Kumar', 'Finance',    t,           'Financial Modelling',     '3.5', 'Productive'],
+    ['Siddharth Kumar', 'Finance',    t,           'Compliance Review',       '2',   'Productive'],
+    ['Siddharth Kumar', 'Finance',    t,           'Strategy Meeting',        '1',   'Meeting'],
+    ['Pooja Verma',     'HR',         t,           'Recruitment Screening',   '2.5', 'Productive'],
+    ['Pooja Verma',     'HR',         t,           'Employee Onboarding',     '2',   'Productive'],
+    ['Pooja Verma',     'HR',         t,           'Admin / Email',           '1',   'Neutral'],
+    ['Pooja Verma',     'HR',         t,           'Idle Browsing',           '0.5', 'Unproductive'],
+
+    // ── MARCH 2026 EARLIER DAYS ──
+    ['Aarav Sharma',    'Software',   y+'-03-18',  'Backend Development',     '4',   'Productive'],
+    ['Aarav Sharma',    'Software',   y+'-03-18',  'Stand-up',                '0.5', 'Meeting'],
+    ['Aarav Sharma',    'Software',   y+'-03-18',  'Distracted Browsing',     '1',   'Unproductive'],
+    ['Neha Patel',      'Software',   y+'-03-18',  'API Integration',         '3.5', 'Productive'],
+    ['Neha Patel',      'Software',   y+'-03-18',  'Code Review Meeting',     '1',   'Meeting'],
+    ['Divya Iyer',      'Education',  y+'-03-18',  'Course Development',      '4',   'Productive'],
+    ['Kiran Desai',     'Logistics',  y+'-03-18',  'Fleet Management',        '3',   'Productive'],
+    ['Kiran Desai',     'Logistics',  y+'-03-18',  'Delay Resolution',        '1.5', 'Neutral'],
+    ['Rahul Bose',      'Operations', y+'-03-18',  'Process Mapping',         '3.5', 'Productive'],
+    ['Siddharth Kumar', 'Finance',    y+'-03-18',  'Budget Analysis',         '4',   'Productive'],
+    ['Pooja Verma',     'HR',         y+'-03-18',  'Policy Review',           '2.5', 'Productive'],
+
+    ['Aarav Sharma',    'Software',   y+'-03-10',  'Sprint Development',      '5',   'Productive'],
+    ['Aarav Sharma',    'Software',   y+'-03-10',  'Retrospective',           '1',   'Meeting'],
+    ['Aarav Sharma',    'Software',   y+'-03-10',  'Coffee / Break',          '1',   'Break'],
+    ['Neha Patel',      'Software',   y+'-03-10',  'Testing Automation',      '4',   'Productive'],
+    ['Neha Patel',      'Software',   y+'-03-10',  'Personal Browsing',       '1.5', 'Unproductive'],
+    ['Rohan Gupta',     'Software',   y+'-03-10',  'Schema Design',           '3',   'Productive'],
+    ['Ananya Singh',    'Software',   y+'-03-10',  'Dashboard Build',         '4.5', 'Productive'],
+    ['Vikram Rao',      'Software',   y+'-03-10',  'Integration Testing',     '3',   'Productive'],
+    ['Vikram Rao',      'Software',   y+'-03-10',  'Idle / Admin',            '1',   'Unproductive'],
+    ['Divya Iyer',      'Education',  y+'-03-10',  'Assessment Design',       '3.5', 'Productive'],
+    ['Divya Iyer',      'Education',  y+'-03-10',  'Faculty Sync',            '1',   'Meeting'],
+    ['Arjun Nair',      'Education',  y+'-03-10',  'Module Recording',        '3',   'Productive'],
+    ['Kiran Desai',     'Logistics',  y+'-03-10',  'Supply Chain Review',     '3.5', 'Productive'],
+    ['Sunita Rao',      'Logistics',  y+'-03-10',  'Coordination Calls',      '2.5', 'Productive'],
+    ['Sunita Rao',      'Logistics',  y+'-03-10',  'Waiting / Idle',          '1.5', 'Unproductive'],
+    ['Rahul Bose',      'Operations', y+'-03-10',  'Ops Optimisation',        '4',   'Productive'],
+    ['Meera Kapoor',    'Operations', y+'-03-10',  'SOP Writing',             '3',   'Productive'],
+    ['Siddharth Kumar', 'Finance',    y+'-03-10',  'P&L Review',              '3.5', 'Productive'],
+    ['Pooja Verma',     'HR',         y+'-03-10',  'Interview Rounds',        '3',   'Productive'],
+    ['Pooja Verma',     'HR',         y+'-03-10',  'Admin & Emails',          '2',   'Neutral'],
+
+    // ── FEBRUARY 2026 ──
+    ['Aarav Sharma',    'Software',   y+'-02-17',  'Feature Build',           '4.5', 'Productive'],
+    ['Aarav Sharma',    'Software',   y+'-02-17',  'Sprint Review',           '1',   'Meeting'],
+    ['Aarav Sharma',    'Software',   y+'-02-17',  'Social Media',            '1',   'Unproductive'],
+    ['Neha Patel',      'Software',   y+'-02-17',  'Backend Services',        '4',   'Productive'],
+    ['Neha Patel',      'Software',   y+'-02-17',  'Team Meeting',            '1',   'Meeting'],
+    ['Divya Iyer',      'Education',  y+'-02-17',  'Content Planning',        '3.5', 'Productive'],
+    ['Kiran Desai',     'Logistics',  y+'-02-17',  'Warehouse Audit',         '3',   'Productive'],
+    ['Kiran Desai',     'Logistics',  y+'-02-17',  'Downtime',                '1',   'Unproductive'],
+    ['Rahul Bose',      'Operations', y+'-02-17',  'Process Improvement',     '3.5', 'Productive'],
+    ['Siddharth Kumar', 'Finance',    y+'-02-17',  'Forecast Modelling',      '4',   'Productive'],
+    ['Pooja Verma',     'HR',         y+'-02-17',  'Talent Acquisition',      '3',   'Productive'],
+
+    ['Aarav Sharma',    'Software',   y+'-02-10',  'Architecture Design',     '3',   'Productive'],
+    ['Aarav Sharma',    'Software',   y+'-02-10',  'Random Browsing',         '2',   'Unproductive'],
+    ['Neha Patel',      'Software',   y+'-02-10',  'Security Audit',          '4',   'Productive'],
+    ['Rohan Gupta',     'Software',   y+'-02-10',  'DB Optimisation',         '3.5', 'Productive'],
+    ['Ananya Singh',    'Software',   y+'-02-10',  'Component Library',       '4',   'Productive'],
+    ['Vikram Rao',      'Software',   y+'-02-10',  'Release Testing',         '3',   'Productive'],
+    ['Divya Iyer',      'Education',  y+'-02-10',  'E-learning Module',       '3',   'Productive'],
+    ['Divya Iyer',      'Education',  y+'-02-10',  'Idle Time',               '1.5', 'Unproductive'],
+    ['Kiran Desai',     'Logistics',  y+'-02-10',  'Route Planning',          '3',   'Productive'],
+    ['Rahul Bose',      'Operations', y+'-02-10',  'KPI Review',              '3',   'Productive'],
+    ['Siddharth Kumar', 'Finance',    y+'-02-10',  'Variance Analysis',       '3.5', 'Productive'],
+    ['Pooja Verma',     'HR',         y+'-02-10',  'Benefits Admin',          '2',   'Neutral'],
+  ]
+
+  seed.forEach(([name,dept,date,activity,hours,category])=>{
+    logs.push({id:logId++,name,dept,date,activity,hours,category})
+  })
+
+  document.getElementById('fDate').value = t
+  renderLog()
+}</script>
+</body>
+</html>
